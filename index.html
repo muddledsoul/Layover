@@ -577,7 +577,7 @@ function tapWords(text){
     return w?`<span class="tw" data-w="${esc(w)}">${esc(tok)}</span>`:esc(tok);
   }).join("");
 }
-const APP_VERSION = "38 (audio look-ahead within Azure free limits)";
+const APP_VERSION = "39 (words finish before the next card)";
 
 const VOICE_SETS = {es:{
   MX:{name:"Mexico",loc:"es-MX",F:"es-MX-DaliaNeural",M:"es-MX-JorgeNeural"},
@@ -706,6 +706,16 @@ document.addEventListener("pointerdown",e=>{
   if(b.tok!==sayTok||Date.now()-b.at>20000||e.target.closest("button,.sit,input,textarea,select,a")) return;
   const p=$("#player"); p.src=b.url; p.play().catch(()=>{});
 },true);
+// Say a word, then move on: with sound on, wait until it has finished (at least minMs, at most
+// maxMs if the network stalls); with Mute all on, move on as soon as the tap has registered.
+function sayThen(text, rate, next, minMs=600, mutedMs=150, maxMs=6000){
+  const my=game; let done=false; const go=()=>{ if(done) return; done=true; if(game===my) next(); };
+  if(S.muteAll==="1"||!text){ setTimeout(go,mutedMs); return; }
+  const t0=Date.now();
+  say(text,rate).then(()=>setTimeout(go,Math.max(120,minMs-(Date.now()-t0))));
+  setTimeout(go,maxMs);
+}
+const afterMs=(next,ms,mutedMs=150)=>setTimeout(next,S.muteAll==="1"?mutedMs:ms);
 async function say(text, rate){
   const my=++sayTok;
   if(S.muteAll==="1") return;
@@ -2013,8 +2023,8 @@ async function vocabMic(){
     const clean=!deck.peekedEs;
     res.innerHTML=`<div class="ok" style="font-size:18px">✓ ${LG.correct}</div><div style="text-align:left">${pronFeedbackHTML(c[1],t,true)}</div>
       <div class="note">${clean?"Card learned. It's out of the deck.":"Good! You peeked, so it'll come back once more."}${t.pron!=null&&t.pron<60?" Tap the word above to hear it, and work on the sound.":""}</div>`;
-    say(c[1],"-10%");
-    setTimeout(()=>{ if(deck&&deck.set.w[deck.queue[0]]===c) nextCard(clean); },3800);
+    { const dk=deck, nx=()=>{ if(deck===dk&&deck.set.w[deck.queue[0]]===c) nextCard(clean); };
+      if(S.muteAll==="1") setTimeout(nx,1500); else { let fired=false; const f=()=>{ if(!fired){ fired=true; nx(); } }; say(c[1],"-10%").then(()=>setTimeout(f,1800)); setTimeout(f,8000); } }
   } else {
     res.innerHTML=`<div class="err">Not quite. I heard: "${esc(t.text)}"</div><div style="margin-top:6px">${pr}</div>
       <div class="note">${deck.tries>=2?"Showing the answer. Listen, then try saying it.":`Try again, or tap Show ${LG.name}.`}</div>`;
@@ -2141,8 +2151,7 @@ function renderLearn(){
       const o=opts[+b.dataset.k], right=o===c;
       b.classList.add(right?"right":"wrong");
       if(!right){ $("#gameBody").querySelectorAll(".opt")[opts.indexOf(c)].classList.add("right"); }
-      say(c[1],"-10%");
-      setTimeout(()=>{ g.lock=false; g.queue.shift(); if(!right) g.queue.splice(Math.min(g.queue.length,2),0,c); renderLearn(); }, right?900:1800);
+      sayThen(c[1],"-10%",()=>{ g.lock=false; g.queue.shift(); if(!right) g.queue.splice(Math.min(g.queue.length,2),0,c); renderLearn(); }, right?600:1600, right?150:900);
     });
   }
 }
@@ -2185,10 +2194,11 @@ function renderQuiz(){
     if(!right) $("#gameBody").querySelectorAll(".opt")[opts.indexOf(c)].classList.add("right");
     if(right&&!g.seen.has(c[1])) g.firstTry++;
     g.seen.add(c[1]);
-    if(type==="pic2word"||!right) say(c[1],"-10%");
     const cap=!right?`<div class="note" style="text-align:center">${smallPic(c)} <b>${esc(c[1])}</b> = ${esc(c[2])}</div>`:"";
     if(cap) $("#gameBody").insertAdjacentHTML("beforeend",cap);
-    setTimeout(()=>{ g.lock=false; g.queue.shift(); if(!right) g.queue.splice(Math.min(g.queue.length,3),0,c); renderQuiz(); }, right?900:2000);
+    const nx=()=>{ g.lock=false; g.queue.shift(); if(!right) g.queue.splice(Math.min(g.queue.length,3),0,c); renderQuiz(); };
+    if(type==="pic2word"||!right) sayThen(c[1],"-10%",nx, right?600:1800, right?150:1000);
+    else afterMs(nx,700);
   });
 }
 
@@ -2225,7 +2235,9 @@ function matchTap(b){
     g.done.add(c[1]);
     if(g.done.size===g.left.length){
       g.lock=true;
-      setTimeout(()=>{ g.lock=false; g.r++; if(g.r<g.rounds.length) renderMatch(); else endMatch(); },700);
+      const nx=()=>{ g.lock=false; g.r++; if(g.r<g.rounds.length) renderMatch(); else endMatch(); };
+      if(S.muteAll==="1") setTimeout(nx,250); else { const w=$("#player"); let fired=false; const f=()=>{ if(!fired){ fired=true; if(game===g) nx(); } };
+        const poll=()=>{ if(fired) return; if(w.paused||w.ended) setTimeout(f,250); else setTimeout(poll,120); }; setTimeout(poll,500); setTimeout(f,5000); }
     }
   } else {
     g.misses++; g.lock=true;
