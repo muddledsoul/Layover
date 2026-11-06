@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#241736"/><stop offset=".55" stop-color="#141c36"/><stop offset="1" stop-color="#0f2224"/></linearGradient>
+ <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22305e"/><stop offset=".45" stop-color="#7a2f5a"/><stop offset=".75" stop-color="#e0705e"/><stop offset="1" stop-color="#f5b25c"/></linearGradient>
+ <mask id="perf"><rect width="1024" height="1024" fill="#fff"/><g fill="#000"><circle cx="232" cy="170" r="22"/><circle cx="232" cy="854" r="22"/><circle cx="288" cy="170" r="22"/><circle cx="288" cy="854" r="22"/><circle cx="344" cy="170" r="22"/><circle cx="344" cy="854" r="22"/><circle cx="400" cy="170" r="22"/><circle cx="400" cy="854" r="22"/><circle cx="456" cy="170" r="22"/><circle cx="456" cy="854" r="22"/><circle cx="512" cy="170" r="22"/><circle cx="512" cy="854" r="22"/><circle cx="568" cy="170" r="22"/><circle cx="568" cy="854" r="22"/><circle cx="624" cy="170" r="22"/><circle cx="624" cy="854" r="22"/><circle cx="680" cy="170" r="22"/><circle cx="680" cy="854" r="22"/><circle cx="736" cy="170" r="22"/><circle cx="736" cy="854" r="22"/><circle cx="792" cy="170" r="22"/><circle cx="792" cy="854" r="22"/><circle cx="232" cy="226" r="22"/><circle cx="792" cy="226" r="22"/><circle cx="232" cy="282" r="22"/><circle cx="792" cy="282" r="22"/><circle cx="232" cy="338" r="22"/><circle cx="792" cy="338" r="22"/><circle cx="232" cy="394" r="22"/><circle cx="792" cy="394" r="22"/><circle cx="232" cy="450" r="22"/><circle cx="792" cy="450" r="22"/><circle cx="232" cy="506" r="22"/><circle cx="792" cy="506" r="22"/><circle cx="232" cy="562" r="22"/><circle cx="792" cy="562" r="22"/><circle cx="232" cy="618" r="22"/><circle cx="792" cy="618" r="22"/><circle cx="232" cy="674" r="22"/><circle cx="792" cy="674" r="22"/><circle cx="232" cy="730" r="22"/><circle cx="792" cy="730" r="22"/><circle cx="232" cy="786" r="22"/><circle cx="792" cy="786" r="22"/><circle cx="232" cy="842" r="22"/><circle cx="792" cy="842" r="22"/></g></mask>
+ <clipPath id="win"><rect x="284" y="222" width="456" height="580" rx="10"/></clipPath>
+ <filter id="sh" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#000" flood-opacity=".45"/></filter>
+</defs>
+<rect width="1024" height="1024" fill="url(#bg)"/>
+<g fill="#f6e7c8" opacity=".55"><circle cx="150" cy="140" r="5"/><circle cx="880" cy="110" r="4"/><circle cx="910" cy="420" r="3.5"/><circle cx="110" cy="560" r="3.5"/><circle cx="860" cy="900" r="4"/><circle cx="170" cy="910" r="3"/></g>
+<g transform="translate(512 500) scale(1.16) translate(-512 -512) rotate(-7 512 512)">
+ <g filter="url(#sh)"><rect x="232" y="170" width="560" height="684" fill="#f6ead8" mask="url(#perf)"/></g>
+ <g clip-path="url(#win)">
+  <rect x="284" y="222" width="456" height="580" fill="url(#sky)"/>
+  <circle cx="594.08" cy="628.0" r="70" fill="#ffd38a" opacity=".9"/>
+  <path d="M284 651.2 L354 604.8 L434 639.5999999999999 L524 570.0 L604 628.0 L740 593.2 V802 H284Z" fill="#5a2a4e" opacity=".9"/>
+  <path d="M284 720.8 Q420.79999999999995 674.4000000000001 534.8 709.2 T740 697.5999999999999 V802 H284Z" fill="#2a1630"/>
+  <g fill="#2a1630"><rect x="384.32" y="628.0" width="22" height="120"/><path d="M380.32 628.0 L395.32 593.2 L410.32 628.0Z"/></g>
+ </g>
+ <!-- speech bubble: three dots in the three destination colours -->
+ <g transform="translate(362.0 282)">
+  <path d="M30 0 H270 Q300 0 300 30 V140 Q300 170 270 170 H120 L70 225 L82 170 H30 Q0 170 0 140 V30 Q0 0 30 0Z" fill="#fff8ef"/>
+  <circle cx="80" cy="85" r="26" fill="#f08a3c"/><circle cx="150" cy="85" r="26" fill="#d9557f"/><circle cx="220" cy="85" r="26" fill="#2f8f7c"/>
+ </g>
+</g>
+<!-- postmark -->
+<g fill="none" stroke="#f6ead8" stroke-width="9" opacity=".7" stroke-linecap="round">
+ <circle cx="800" cy="800" r="112"/><circle cx="800" cy="800" r="86" stroke-width="4"/>
+ <path d="M660 915 q40 -26 80 0 t80 0 t80 0 t80 0"/><path d="M690 965 q40 -26 80 0 t80 0 t80 0"/>
+</g>
+</svg>

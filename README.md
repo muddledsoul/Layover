@@ -1,6 +1,6 @@
-# Hablemos - Spanish speaking tutor (iPhone PWA)
+# Wanderwort - Spanish, French & German speaking tutor (iPhone PWA)
 
-Roleplay conversations in Mexican / Colombian / Central American Spanish with
+Roleplay conversations in Spanish (Mexico, Colombia, Central America), French or German with
 pronunciation scoring (Azure), sentence corrections + natural rephrasing (Claude),
 and native-voice replies.
 
@@ -26,6 +26,8 @@ Each language is a destination at dusk: Mexican plaza under papel picado (Spanis
 ## Home menu
 
 Start today's session · Vocabulary · Essential grammar · AI Conversation Partner (scenarios, level, accent, voice and speed live on that screen).
+
+*Wanderwort* is German for a word that travels from language to language. (The app was first called Hablemos; the repo and saved data keep that name.)
 
 ## One-time setup (~10 min)
 1. **Azure Speech (free F0 tier)**: portal.azure.com -> Create resource -> "Speech service"
