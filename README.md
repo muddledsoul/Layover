@@ -15,6 +15,10 @@ Pick the language on first launch; switch any time in **Settings → Language yo
 - All vocab sets, games and scenes are translated, with a respelled "How to say it" and sound tips for each language.
 - Grammar for French: Être vs Avoir, Le ou la?, Where is it? Grammar for German: Sein vs Haben, Der/die/das, Where is it? (with dative articles).
 
+## Look
+
+Each language is a destination at dusk: Mexican plaza under papel picado (Spanish), Paris rooftops at blue hour (French), an Alpine lake village (German). The home screen greets you in that language with a postmark date; Setup shows all three as postcards above the key setup guides.
+
 ## Home menu
 
 Start today's session · Vocabulary · Essential grammar · AI Conversation Partner (scenarios, level, accent, voice and speed live on that screen).
