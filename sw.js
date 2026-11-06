@@ -1,4 +1,4 @@
-const CACHE = "layover-1.1.0";
+const CACHE = "layover-1.2.0";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL.map(u => new Request(u, {cache: "reload"}))))); self.skipWaiting(); });
 self.addEventListener("activate", e => {

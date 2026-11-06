@@ -1,7 +1,7 @@
 {
   "name": "Layover - Language Speaking Tutor",
   "short_name": "Layover",
-  "description": "Speak Spanish, French or German with an AI tutor, native voices and pronunciation scoring.",
+  "description": "Speak Spanish, French, Italian or German with an AI tutor, native voices and pronunciation scoring.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

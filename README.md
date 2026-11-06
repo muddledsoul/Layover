@@ -1,16 +1,17 @@
-# Layover - Spanish, French & German speaking tutor (iPhone PWA)
+# Layover - Spanish, French, Italian & German speaking tutor (iPhone PWA)
 
 Roleplay conversations in Spanish (Mexico, Colombia, Central America), French or German with
 pronunciation scoring (Azure), sentence corrections + natural rephrasing (Claude),
 and native-voice replies.
 
 
-## Languages: Spanish, French, German
+## Languages: Spanish, French, Italian, German
 
 Pick the language on first launch; switch any time in **Settings → Language you're learning** (the app reloads in that language). Each language keeps its own progress, vocab, game scores, training plan, level and tutor accent. Keys, budget and sound settings are shared.
 
 - **Spanish:** Mexico, Colombia and Central American voices; graded against es-MX.
 - **French:** France, Québec, Belgium and Switzerland voices; graded against fr-FR (fr-CA for Québec).
+- **Italian:** Italy voices; graded against it-IT. Grammar: Essere vs Avere, Il o la?, Where is it?
 - **German:** Germany, Austria and Switzerland voices; graded against de-DE.
 - All vocab sets, games and scenes are translated, with a respelled "How to say it" and sound tips for each language.
 - Grammar for French: Être vs Avoir, Le ou la?, Where is it? Grammar for German: Sein vs Haben, Der/die/das, Where is it? (with dative articles).

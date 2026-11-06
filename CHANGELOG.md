@@ -5,6 +5,11 @@ Layover follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 - **MINOR** (1.x.0): new features or content that keep saved data compatible.
 - **MAJOR** (x.0.0): changes that break saved data or how the app is used.
 
+## 1.2.0 - 2026-11-06
+- Italian as a fourth language: all vocab sets and scenes, native Italian voices, pronunciation scoring (it-IT), Italian sound tips.
+- Italian grammar: Essere vs Avere, Il o la?, and Where is it? with merged prepositions (sulla, nel, accanto alla).
+- Amalfi-coast dusk theme and postcard; language postcards now in a 2 x 2 grid.
+
 ## 1.1.0 - 2026-11-06
 - Clear warning on Setup and Progress that deleting the home-screen app or clearing Safari data erases progress.
 - Back up straight to Files or iCloud Drive through the share sheet, optionally including your API keys for a one-tap restore.
