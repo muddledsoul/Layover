@@ -314,7 +314,7 @@ html.nomic [data-mode="say"],html.nomic [data-mode="name"],html.nomic [data-gmod
         <ol>
           <li>Go to <b>azure.microsoft.com/free</b> and sign in with any Microsoft account. It asks for a phone number and a card. The card is only for identity, and the free tier never charges.</li>
           <li>Go to <b>portal.azure.com</b>, search <b>Speech</b> in the top bar, choose <b>Speech services</b>, then tap <b>+ Create</b>.</li>
-          <li>Fill in: Resource group → <i>Create new</i> "hablemos". Region → <b>East US</b>. Name → anything unique. Pricing tier → <b>Free F0</b>. The other tier costs money.</li>
+          <li>Fill in: Resource group → <i>Create new</i> "layover". Region → <b>East US</b>. Name → anything unique. Pricing tier → <b>Free F0</b>. The other tier costs money.</li>
           <li>Tap <b>Review + create → Create</b>, wait about a minute, then tap <b>Go to resource → Keys and Endpoint</b>.</li>
           <li>Copy <b>KEY 1</b> into the box below. For region, enter what "Location/Region" shows (usually <code>eastus</code>).</li>
         </ol>
@@ -331,7 +331,7 @@ html.nomic [data-mode="say"],html.nomic [data-mode="name"],html.nomic [data-gmod
           <li>Go to <b>platform.claude.com</b> and sign in. The same email as your Claude account works, but API billing is separate from a Claude subscription.</li>
           <li><b>Settings → Billing</b>: buy prepaid credit. $5 is plenty to start, and a 15-min session costs a few cents. On a Max plan you can claim free monthly API credits at claude.ai → Settings → Billing → API credits.</li>
           <li><b>Settings → Limits</b>: set a low monthly spend limit (e.g. $10) so a lost phone can never cost more.</li>
-          <li><b>Settings → API keys → Create key</b>, name it "hablemos", and <b>copy it immediately</b>. It starts with <code>sk-ant-</code> and is only shown once. If you lose it, just make a new one.</li>
+          <li><b>Settings → API keys → Create key</b>, name it "layover", and <b>copy it immediately</b>. It starts with <code>sk-ant-</code> and is only shown once. If you lose it, just make a new one.</li>
         </ol>
         <p class="tip">💡 On iPhone, if the copy button doesn't work, use <b>aA → Request Desktop Website</b>.</p>
       </details>
@@ -382,7 +382,7 @@ html.nomic [data-mode="say"],html.nomic [data-mode="name"],html.nomic [data-gmod
 
 <!-- HOME -->
 <section id="s-home" class="screen">
-  <header><h1 id="homeTitle">¡Hablemos!</h1><button class="iconbtn" id="openProgress" aria-label="Progress">📈</button><button class="iconbtn" id="openSettings" aria-label="Settings">⚙︎</button></header>
+  <header><h1 id="homeTitle">Layover</h1><button class="iconbtn" id="openProgress" aria-label="Progress">📈</button><button class="iconbtn" id="openSettings" aria-label="Settings">⚙︎</button></header>
   <div class="scroll">
     <div class="hero" id="hero"></div>
     <div id="todayCard"></div>
@@ -587,7 +587,7 @@ function tapWords(text){
     return w?`<span class="tw" data-w="${esc(w)}">${esc(tok)}</span>`:esc(tok);
   }).join("");
 }
-const APP_VERSION = "44 (renamed Layover)";
+const APP_VERSION = "45 (Layover everywhere)";
 
 const VOICE_SETS = {es:{
   MX:{name:"Mexico",loc:"es-MX",F:"es-MX-DaliaNeural",M:"es-MX-JorgeNeural"},
@@ -1655,8 +1655,8 @@ Respond ONLY with JSON:
 
 function exportP(){
   try{
-    const blob=new Blob([JSON.stringify({app:"hablemos",v:1,exported:new Date().toISOString(),progress:P},null,1)],{type:"application/json"});
-    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`hablemos-progress-${dayKey()}.json`;
+    const blob=new Blob([JSON.stringify({app:"layover",v:1,exported:new Date().toISOString(),progress:P},null,1)],{type:"application/json"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`layover-progress-${dayKey()}.json`;
     document.body.appendChild(a); a.click(); a.remove();
   }catch(e){ toast("Export failed: "+e.message,4000); }
 }
@@ -4090,7 +4090,7 @@ function renderPostcards(){
 
 function paintLang(){
   document.querySelectorAll(".lgName").forEach(e=>e.textContent=LG.name);
-  $("#homeTitle").textContent=LG.title; 
+  $("#homeTitle").textContent="Layover"; 
   $("#typeIn").placeholder=LG.typePh; $("#langNote").textContent=LG.note; $("#gramSub").textContent="Essential grammar: "+LG.gramSub;
   const T=UI_T[LANG]; $("#tlVocab").textContent=T.vocab; $("#tlGram").textContent=T.gram; $("#tlConvo").textContent=T.convo;
   $("#customText").placeholder=LG.custom; document.documentElement.lang=LANG;
