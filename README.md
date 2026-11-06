@@ -4,6 +4,21 @@ Roleplay conversations in Mexican / Colombian / Central American Spanish with
 pronunciation scoring (Azure), sentence corrections + natural rephrasing (Claude),
 and native-voice replies.
 
+
+## Languages: Spanish, French, German
+
+Pick the language on first launch; switch any time in **Settings → Language you're learning** (the app reloads in that language). Each language keeps its own progress, vocab, game scores, training plan, level and tutor accent. Keys, budget and sound settings are shared.
+
+- **Spanish:** Mexico, Colombia and Central American voices; graded against es-MX.
+- **French:** France, Québec, Belgium and Switzerland voices; graded against fr-FR (fr-CA for Québec).
+- **German:** Germany, Austria and Switzerland voices; graded against de-DE.
+- All vocab sets, games and scenes are translated, with a respelled "How to say it" and sound tips for each language.
+- Grammar for French: Être vs Avoir, Le ou la?, Where is it? Grammar for German: Sein vs Haben, Der/die/das, Where is it? (with dative articles).
+
+## Home menu
+
+Start today's session · Vocabulary · Essential grammar · AI Conversation Partner (scenarios, level, accent, voice and speed live on that screen).
+
 ## One-time setup (~10 min)
 1. **Azure Speech (free F0 tier)**: portal.azure.com -> Create resource -> "Speech service"
    -> Pricing tier **Free F0**, region **East US**. Open it -> Keys and Endpoint -> copy KEY 1 and the region.

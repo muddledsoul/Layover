@@ -201,7 +201,8 @@ table.conj{width:100%;border-collapse:collapse;font-size:16px}table.conj td,tabl
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
 .sprint{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
 .sbtn{border-radius:16px;padding:20px 8px;font-size:30px;font-weight:800;color:#04241c;line-height:1.1}.sbtn span{font-size:14px;font-weight:600;opacity:.7;letter-spacing:.04em}
-.sbtn.ser{background:#64b5f6}.sbtn.estar{background:#ffb74d}.sbtn:active{transform:scale(.97)}
+.sbtn.ser{background:#64b5f6}.sbtn.estar{background:#ffb74d}.sbtn.neu{background:#81c784}.sprint.three{grid-template-columns:1fr 1fr 1fr}.sprint.three .sbtn{font-size:26px}
+.gm{color:#64b5f6}.gf{color:#f48fb1}.gn{color:#81c784}.sbtn:active{transform:scale(.97)}
 .bigmic{width:76px;height:76px;border-radius:50%;background:var(--accent);display:inline-grid;place-items:center}.bigmic svg{width:32px;height:32px;fill:#04241c}
 .bigmic.rec{background:var(--bad);animation:pulse 1.4s infinite}.bigmic.rec svg{fill:#fff}
 .lstage{position:relative;width:100%;aspect-ratio:300/190;border-radius:14px;overflow:hidden;background:linear-gradient(#d6efff 0 70%,#c5e1a5 70%);container-type:inline-size;border:1px solid var(--line)}
@@ -306,6 +307,9 @@ pre.dbg{white-space:pre-wrap;word-break:break-word;font:11px/1.35 ui-monospace,M
         </ol>
       </details>
     </div>
+    <label>Language you're learning</label>
+    <div class="seg" id="langSeg"><button data-v="es">🇲🇽 Spanish</button><button data-v="fr">🇫🇷 French</button><button data-v="de">🇩🇪 German</button></div>
+    <p class="note" style="margin-top:6px">Each language keeps its own progress, vocab, game scores and training plan. Keys, budget and sound settings are shared.</p>
     <label>Azure Speech key</label><input id="azKey" type="password" autocomplete="off" placeholder="32-character key">
     <label>Azure Speech region</label><input id="azRegion" placeholder="eastus" autocapitalize="off">
     <label>Claude API key</label><input id="clKey" type="password" autocomplete="off" placeholder="sk-ant-...">
@@ -324,7 +328,7 @@ pre.dbg{white-space:pre-wrap;word-break:break-word;font:11px/1.35 ui-monospace,M
     <p class="note" style="margin-top:6px">The 🔊 button at the top of every game toggles Mute all.</p>
     <label>Auto-play tutor replies</label>
     <div class="seg" id="autoplaySeg"><button data-v="1">On</button><button data-v="0">Off</button></div>
-    <p class="note">Pronunciation is graded against Mexican Spanish (es-MX). That is the only Latin American accent Azure's assessor supports, and it's a solid neutral reference for Colombia and Central America too.</p>
+    <p class="note" id="langNote"></p>
     <div style="height:14px"></div>
     <button class="btn" id="saveSettings">Save</button>
     <div style="height:10px"></div>
@@ -339,12 +343,20 @@ pre.dbg{white-space:pre-wrap;word-break:break-word;font:11px/1.35 ui-monospace,M
 
 <!-- HOME -->
 <section id="s-home" class="screen">
-  <header><h1>¡Hablemos!</h1><button class="iconbtn" id="openProgress" aria-label="Progress">📈</button><button class="iconbtn" id="openSettings" aria-label="Settings">⚙︎</button></header>
+  <header><h1 id="homeTitle">¡Hablemos!</h1><button class="iconbtn" id="openProgress" aria-label="Progress">📈</button><button class="iconbtn" id="openSettings" aria-label="Settings">⚙︎</button></header>
   <div class="scroll">
     <div id="todayCard"></div>
-    <button class="vocabBtn" id="openVocab"><span style="font-size:30px">🃏</span><span><b>Vocabulary flashcards</b><br><span class="note" style="margin:0">Picture cards: say the word in Spanish</span></span><span style="margin-left:auto;color:var(--muted)">›</span></button>
-    <button class="vocabBtn" id="openGram"><span style="font-size:30px">📐</span><span><b>Grammar</b><br><span class="note" style="margin:0">Ser vs Estar · -ando / -iendo · Where is it?</span></span><span style="margin-left:auto;color:var(--muted)">›</span></button>
-    <label>Or pick any scenario</label>
+    <button class="vocabBtn" id="openVocab"><span style="font-size:30px">🃏</span><span><b>Vocabulary</b><br><span class="note" style="margin:0">Picture cards, games and scenes in <span class="lgName">Spanish</span></span></span><span style="margin-left:auto;color:var(--muted)">›</span></button>
+    <button class="vocabBtn" id="openGram"><span style="font-size:30px">📐</span><span><b>Essential grammar</b><br><span class="note" style="margin:0" id="gramSub">Ser vs Estar · -ando / -iendo · Where is it?</span></span><span style="margin-left:auto;color:var(--muted)">›</span></button>
+    <button class="vocabBtn" id="openConvo"><span style="font-size:30px">💬</span><span><b>AI Conversation Partner</b><br><span class="note" style="margin:0">Roleplay any scenario out loud. Pick the level, accent and voice.</span></span><span style="margin-left:auto;color:var(--muted)">›</span></button>
+  </div>
+</section>
+
+<!-- CONVERSATION SETUP -->
+<section id="s-convo" class="screen">
+  <header><button class="iconbtn" id="convoBack" aria-label="Back">‹</button><h1>AI Conversation Partner</h1></header>
+  <div class="scroll">
+    <label style="margin-top:0">Pick a scenario</label>
     <div class="grid" id="scenarios"></div>
     <div id="customWrap" style="display:none">
       <label>Describe the situation</label>
@@ -362,7 +374,7 @@ pre.dbg{white-space:pre-wrap;word-break:break-word;font:11px/1.35 ui-monospace,M
     <div class="seg" id="speedSeg"><button data-v="0%">Normal</button><button data-v="-15%">Slower</button><button data-v="-30%">Slow</button></div>
     <div style="height:20px"></div>
     <button class="btn" id="startBtn">Start conversation</button>
-    <p class="note" style="text-align:center">Tap the mic, speak, tap again to send. Underlined words show pronunciation: green good · yellow close · red needs work. Tap any Spanish word, yours or the tutor's, to hear it.</p>
+    <p class="note" style="text-align:center">Tap the mic, speak, tap again to send. Underlined words show pronunciation: green good · yellow close · red needs work. Tap any <span class="lgName">Spanish</span> word, yours or the tutor's, to hear it.</p>
   </div>
 </section>
 
@@ -384,7 +396,7 @@ pre.dbg{white-space:pre-wrap;word-break:break-word;font:11px/1.35 ui-monospace,M
   <div style="padding:10px 16px 0"><div class="note" id="deckCount" style="margin:0"></div><div class="meter" style="margin:6px 0 0"><i id="deckBar" style="width:0"></i></div></div>
   <div class="scroll" id="cardBox"></div>
   <div class="bar" id="deckCtrls">
-    <div class="row" style="margin-bottom:12px"><button class="btn ghost" id="vShowEs">Show Spanish</button><button class="btn ghost" id="vShowEn">Show English</button></div>
+    <div class="row" style="margin-bottom:12px"><button class="btn ghost" id="vShowEs">Show <span class="lgName">Spanish</span></button><button class="btn ghost" id="vShowEn">Show English</button></div>
     <div class="ctrls">
       <div class="l" style="flex-direction:column;align-items:center;gap:4px"><button class="side" id="vKnew" aria-label="I knew it" style="font-size:18px;font-weight:700">✓</button><span class="note" style="margin:0;font-size:11.5px">I knew it</span></div>
       <div style="text-align:center"><button id="vMic" aria-label="Say it"><svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V22h2v-3.08A7 7 0 0 0 19 12h-2z"/></svg></button><div class="note" id="vMicLbl" style="margin-top:6px">Tap and say it</div></div>
@@ -422,7 +434,7 @@ pre.dbg{white-space:pre-wrap;word-break:break-word;font:11px/1.35 ui-monospace,M
   </header>
   <div class="scroll" id="chatScroll"><div id="chat"></div></div>
   <div class="bar">
-    <div id="typebox"><input id="typeIn" placeholder="Escribe en español…" autocapitalize="sentences"><button id="typeSend">Send</button></div>
+    <div id="typebox"><input id="typeIn" placeholder="" autocapitalize="sentences"><button id="typeSend">Send</button></div>
     <div class="liverow"><div class="live" id="live"></div><button class="chip" id="clearBtn">✕ Clear &amp; redo</button></div>
     <div class="ctrls">
       <div class="l"><button class="side" id="kbBtn" aria-label="Type instead">⌨︎</button><button class="side" id="askBtn" aria-label="Ask in English">❓</button></div>
@@ -500,7 +512,33 @@ pre.dbg{white-space:pre-wrap;word-break:break-word;font:11px/1.35 ui-monospace,M
 "use strict";
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const RECOG_LOCALE = "es-MX";
+/* ---------- languages ----------
+   The app teaches Spanish, French or German. LANG is read straight from saved settings at
+   startup; switching language saves and reloads, so everything below sees one language. */
+const LANG=(()=>{ try{ const l=JSON.parse(localStorage.getItem("hablemos.v1")||"{}").lang; return ["es","fr","de"].includes(l)?l:"es"; }catch(e){ return "es"; } })();
+const LANG_CHOSEN=(()=>{ try{ return !!JSON.parse(localStorage.getItem("hablemos.v1")||"{}").lang; }catch(e){ return false; } })();
+const LANGS={
+ es:{name:"Spanish",native:"Español",flag:"🇲🇽",title:"¡Hablemos!",typePh:"Escribe en español…",test:"¡Hola! Las claves de Azure funcionan.",
+   arts:"el|la|los|las|un|una|unos|unas", fill:"el|la|los|las|un|una|unos|unas|es|son|eso|esto|este|esta", defCountry:"MX", recog:()=>"es-MX",
+   done:"¡Todo listo!", correct:"¡Correcto!", nameQ:"¿Cómo se llama?", thatIs:"Eso es", noThatIs:"No, eso es",
+   note:"Pronunciation is graded against Mexican Spanish (es-MX). That is the only Latin American accent Azure's assessor supports, and it's a solid neutral reference for Colombia and Central America too.",
+   tipEx:"tap the single r, keep the vowel pure, soft d between vowels", weakEx:"'ser vs estar' or 'single r tap (pero, para)'",
+   gramSub:"Ser vs Estar · -ando / -iendo · Where is it?", custom:"e.g. I'm at a car rental counter in Bogotá and my reservation is missing"},
+ fr:{name:"French",native:"Français",flag:"🇫🇷",title:"Parlons !",typePh:"Écris en français…",test:"Bonjour ! Les clés Azure fonctionnent.",
+   arts:"le|la|les|l|un|une|des", fill:"le|la|les|l|un|une|des|du|c|est|ce|ca|cest|voici|voila|sont", defCountry:"FR", recog:c=>c==="CA"?"fr-CA":"fr-FR",
+   done:"C'est fini !", correct:"Correct !", nameQ:"Comment ça s'appelle ?", thatIs:"Ça, c'est", noThatIs:"Non, ça, c'est",
+   note:"Pronunciation is graded against standard French (fr-FR), or Canadian French (fr-CA) when the tutor accent is Canada.",
+   tipEx:"round your lips for u, keep the nasal vowel without saying the n, swallow the final consonant", weakEx:"'être vs avoir' or 'nasal vowels (on, an)'",
+   gramSub:"Être vs Avoir · Le ou la ? · Where is it?", custom:"e.g. I'm at a car rental counter in Lyon and my reservation is missing"},
+ de:{name:"German",native:"Deutsch",flag:"🇩🇪",title:"Sprechen wir!",typePh:"Schreib auf Deutsch…",test:"Hallo! Die Azure-Schlüssel funktionieren.",
+   arts:"der|die|das|den|dem|des|ein|eine|einen|einem|einer", fill:"der|die|das|den|dem|des|ein|eine|einen|einem|einer|ist|sind|es|das", defCountry:"DE", recog:()=>"de-DE",
+   done:"Alles fertig!", correct:"Richtig!", nameQ:"Wie heißt das?", thatIs:"Das ist", noThatIs:"Nein, das ist",
+   note:"Pronunciation is graded against standard German (de-DE). It's a solid reference for Austria and Switzerland too.",
+   tipEx:"ch in ich is a soft hiss, round your lips for ü, w sounds like English v", weakEx:"'der/die/das' or 'ü and ö'",
+   gramSub:"Sein vs Haben · Der, die, das · Where is it?", custom:"e.g. I'm at a car rental counter in Munich and my reservation is missing"}
+};
+const LG=LANGS[LANG];
+const recogLoc=()=>LG.recog(S.country);
 // Wrap each Spanish word in a tappable span; tapping one plays it slowly (see listener at boot).
 function tapWords(text){
   return String(text??"").split(/(\s+)/).map(tok=>{
@@ -509,9 +547,9 @@ function tapWords(text){
     return w?`<span class="tw" data-w="${esc(w)}">${esc(tok)}</span>`:esc(tok);
   }).join("");
 }
-const APP_VERSION = "34 (Find it! scene game)";
+const APP_VERSION = "35 (French & German, new home menu)";
 
-const VOICES = {
+const VOICE_SETS = {es:{
   MX:{name:"Mexico",loc:"es-MX",F:"es-MX-DaliaNeural",M:"es-MX-JorgeNeural"},
   CO:{name:"Colombia",loc:"es-CO",F:"es-CO-SalomeNeural",M:"es-CO-GonzaloNeural"},
   CR:{name:"Costa Rica",loc:"es-CR",F:"es-CR-MariaNeural",M:"es-CR-JuanNeural"},
@@ -519,8 +557,16 @@ const VOICES = {
   SV:{name:"El Salvador",loc:"es-SV",F:"es-SV-LorenaNeural",M:"es-SV-RodrigoNeural"},
   HN:{name:"Honduras",loc:"es-HN",F:"es-HN-KarlaNeural",M:"es-HN-CarlosNeural"},
   NI:{name:"Nicaragua",loc:"es-NI",F:"es-NI-YolandaNeural",M:"es-NI-FedericoNeural"},
-  PA:{name:"Panama",loc:"es-PA",F:"es-PA-MargaritaNeural",M:"es-PA-RobertoNeural"}
+  PA:{name:"Panama",loc:"es-PA",F:"es-PA-MargaritaNeural",M:"es-PA-RobertoNeural"}},
+ fr:{FR:{name:"France",loc:"fr-FR",F:"fr-FR-DeniseNeural",M:"fr-FR-HenriNeural"},
+  CA:{name:"Canada (Québec)",loc:"fr-CA",F:"fr-CA-SylvieNeural",M:"fr-CA-AntoineNeural"},
+  BE:{name:"Belgium",loc:"fr-BE",F:"fr-BE-CharlineNeural",M:"fr-BE-GerardNeural"},
+  CH:{name:"Switzerland",loc:"fr-CH",F:"fr-CH-ArianeNeural",M:"fr-CH-FabriceNeural"}},
+ de:{DE:{name:"Germany",loc:"de-DE",F:"de-DE-KatjaNeural",M:"de-DE-ConradNeural"},
+  AT:{name:"Austria",loc:"de-AT",F:"de-AT-IngridNeural",M:"de-AT-JonasNeural"},
+  CH:{name:"Switzerland",loc:"de-CH",F:"de-CH-LeniNeural",M:"de-CH-JanNeural"}}
 };
+const VOICES=VOICE_SETS[LANG];
 
 const SCENARIOS = [
   {id:"cafe",ic:"☕",t:"Café",d:"Order a drink and something to eat",
@@ -552,6 +598,15 @@ const LEVELS = {
 const DEFAULTS = {azKey:"",azRegion:"eastus",clKey:"",model:"claude-sonnet-5-5",autoplay:"1",
   scenario:"cafe",level:"beginner",country:"MX",gender:"F",speed:"-15%",custom:"",budget:"10",sfx:"1",muteAll:"0"};
 let S = load();
+if(!VOICES[S.country]) S.country=LG.defCountry;
+// Switch the language being learned. Accent and level are kept per language; keys, budget
+// and sound settings are shared. Progress and vocab live in per-language storage keys.
+function setLang(l){
+  if(!LANGS[l]) return;
+  S["country_"+LANG]=S.country; S["level_"+LANG]=S.level;
+  S.lang=l; S.country=S["country_"+l]||LANGS[l].defCountry; S.level=S["level_"+l]||"beginner";
+  save(); if(l!==LANG) location.reload();
+}
 function load(){ try{ return Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem("hablemos.v1")||"{}")); }catch(e){ return {...DEFAULTS}; } }
 function save(){ try{ localStorage.setItem("hablemos.v1", JSON.stringify(S)); }catch(e){} }
 
@@ -575,7 +630,7 @@ function unlockAudio(){
   p.play().catch(()=>{});
 }
 const ttsCache=new Map();
-function voice(){ const v=VOICES[S.country]||VOICES.MX; return {name:v[S.gender]||v.F, loc:v.loc}; }
+function voice(){ const v=VOICES[S.country]||VOICES[LG.defCountry]; return {name:v[S.gender]||v.F, loc:v.loc}; }
 function speechConfig(){
   const sdk=window.SpeechSDK;
   if(!sdk) throw new Error("Speech SDK failed to load. Check your connection and reload.");
@@ -723,8 +778,8 @@ function parseJSON(t){
 
 function systemPrompt(){
   const sc=session.scenario; const reg=VOICES[S.country].name;
-  return `You are a friendly Spanish conversation partner and tutor for an English-speaking adult learner (an American).
-DIALECT: Spanish as spoken in ${reg}. Use vocabulary, forms of address and expressions natural there.
+  return `You are a friendly ${LG.name} conversation partner and tutor for an English-speaking adult learner (an American).
+DIALECT: ${LG.name} as spoken in ${reg}. Use vocabulary, forms of address and expressions natural there.
 LEVEL: ${LEVELS[S.level]}
 SCENARIO: You are ${sc.role}. Stay in character in "reply". Keep the conversation moving and realistic.
 
@@ -732,7 +787,7 @@ Each learner turn gives you either their speech-recognition transcript with auto
 
 Respond ONLY with one JSON object, no markdown, no code fences:
 {
- "reply": "your in-character reply in Spanish, 1-3 short sentences, usually ending with something that invites a response",
+ "reply": "your in-character reply in ${LG.name}, 1-3 short sentences, usually ending with something that invites a response",
  "reply_en": "English translation of reply",
  "correction": null OR {
     "corrected": "the learner's sentence with grammar, agreement, verb, or word-choice errors fixed (minimal changes)",
@@ -741,18 +796,18 @@ Respond ONLY with one JSON object, no markdown, no code fences:
     "natural_en": "English translation of natural",
     "notes": ["one short English explanation per fix"]
  },
- "pronunciation": [{"word":"word from their speech","tip":"short, concrete English tip on the specific sound(s), e.g. tap the single r, keep the vowel pure, soft d between vowels"}],
- "hint": "one natural thing the learner could say next, in Spanish, at their level"
+ "pronunciation": [{"word":"word from their speech","tip":"short, concrete English tip on the specific sound(s), e.g. ${LG.tipEx}"}],
+ "hint": "one natural thing the learner could say next, in ${LG.name}, at their level"
 }
 Rules:
 - "correction" is null only if the learner's sentence was correct AND natural. Ignore missing punctuation, capitalization, and accents in transcripts (those come from the recognizer).
 - "pronunciation": only words scored below 75, at most 3, most important first. Empty array for typed turns or if all words scored 75+.
-- Notes, tips, corrected_en and natural_en in English; reply, corrected, natural, hint in Spanish.
-- If the learner writes or speaks in English, help them say it in Spanish via "correction" and continue in character.${profileForPrompt()}`;
+- Notes, tips, corrected_en and natural_en in English; reply, corrected, natural, hint in ${LG.name}.
+- If the learner writes or speaks in English, help them say it in ${LG.name} via "correction" and continue in character.${profileForPrompt()}`;
 }
 
 /* ---------- progress store ---------- */
-const PKEY="hablemos.progress.v1";
+const PKEY="hablemos.progress.v1"+(LANG==="es"?"":"."+LANG);
 const PBLANK=()=>({sessions:[],focus:[],mastered:[],phrases:[],trouble:{},plan:null,levelNote:null});
 let P=loadP();
 function loadP(){ try{ return Object.assign(PBLANK(), JSON.parse(localStorage.getItem(PKEY)||"{}")); }catch(e){ return PBLANK(); } }
@@ -831,12 +886,12 @@ let rec=null, audioCfg=null, segs=[], recording=false, recText="", recStarted=0;
 function startRec(opts={}){
   const sdk=window.SpeechSDK; const cfg=speechConfig();
   const live=opts.live||$("#live"); const assess=opts.assess!==false;
-  cfg.speechRecognitionLanguage=opts.locale||RECOG_LOCALE;
+  cfg.speechRecognitionLanguage=opts.locale||recogLoc();
   cfg.outputFormat=sdk.OutputFormat.Detailed;
   cfg.setProperty(sdk.PropertyId.Speech_SegmentationSilenceTimeoutMs,"1500");
   audioCfg=sdk.AudioConfig.fromDefaultMicrophoneInput();
   rec=new sdk.SpeechRecognizer(cfg, audioCfg);
-  DBG.log("mic","startRec "+(opts.locale||RECOG_LOCALE)+(opts.ref?" (practice)":""));
+  DBG.log("mic","startRec "+(opts.locale||recogLoc())+(opts.ref?" (practice)":""));
   hookRecLog(rec,"rec");
   if(assess){
     const pa=new sdk.PronunciationAssessmentConfig(opts.ref||"", sdk.PronunciationAssessmentGradingSystem.HundredMark,
@@ -1071,7 +1126,7 @@ async function review(){
   const prior=P.focus.map(f=>f.t);
   try{
     const d=await claudeJSON(
-      `You are a Spanish tutor reviewing a learner's speaking practice session (${VOICES[S.country].name} Spanish, level ${session.level}, scenario: ${session.scenario.t}${session.goal?", today's goal: "+session.goal:""}).
+      `You are a ${LG.name} tutor reviewing a learner's speaking practice session (${VOICES[S.country].name} ${LG.name}, level ${session.level}, scenario: ${session.scenario.t}${session.goal?", today's goal: "+session.goal:""}).
 The learner's OPEN WEAK SPOTS from earlier sessions are: ${prior.length?prior.map(p=>`"${p}"`).join(", "):"(none yet)"}.
 Respond ONLY with JSON:
 {"summary":"2-3 encouraging but honest sentences in English${session.goal?", including whether they hit today's goal":""}",
@@ -1080,7 +1135,7 @@ Respond ONLY with JSON:
  "phrases":[{"es":"useful phrase for this scenario","en":"translation"}],
  "weak_spots":{"still":["open weak spots (exact text) that showed up again as a problem"],
                "improved":["open weak spots (exact text) the learner used correctly this session"],
-               "new":["new recurring problems worth tracking, as short labels like 'ser vs estar' or 'single r tap (pero, para)'; skip one-off slips"]},
+               "new":["new recurring problems worth tracking, as short labels like ${LG.weakEx}; skip one-off slips"]},
  "level_note":"one honest sentence on how close they are to the next level and what's holding them back"}
 Give 3-5 phrases. Only put an item under improved/still if this session actually gave evidence.`,
       [{role:"user",content:"Learner turns:\n"+lines}], 3000);
@@ -1172,14 +1227,14 @@ async function askSubmit(){
   askBusy=true; $("#askLive").textContent=""; $("#askOut").innerHTML=`<p class="note">Thinking…</p>`;
   const reg=VOICES[S.country].name;
   const ctx=session&&session.transcript.length?session.transcript.slice(-8).join("\n"):"(no conversation yet)";
-  const sys=`You are a patient Spanish tutor for an English-speaking American adult learner (level: ${S.level}). Teach Spanish as spoken in ${reg}.
+  const sys=`You are a patient ${LG.name} tutor for an English-speaking American adult learner (level: ${S.level}). Teach ${LG.name} as spoken in ${reg}.
 The learner pauses their roleplay to ask a question in English. Recent conversation for context:
 ${ctx}
 
 Answer the question. If they ask how to say something, give the most natural way a person from ${reg} would say it. If they ask what something means, translate and explain it. If it's a grammar or usage question, explain briefly with an example.
 Respond ONLY with JSON, no markdown:
 {"explanation":"clear English answer, 1-3 short sentences",
- "say":"the key Spanish phrase to learn and practice (null only for a pure grammar question with no phrase)",
+ "say":"the key ${LG.name} phrase to learn and practice (null only for a pure grammar question with no phrase)",
  "say_en":"English meaning of say",
  "phonetic":"easy English-style pronunciation of say with stressed syllable in caps, e.g. meh goos-TAH-ree-ah",
  "breakdown":[{"es":"word or chunk from say","en":"meaning or short note"}],
@@ -1223,7 +1278,7 @@ async function practiceTap(){
   if(askRecMode) return;
   try{
     $("#player").pause();
-    startRec({locale:RECOG_LOCALE, ref:lastAsk.say, assess:true, live:$("#practiceLive")});
+    startRec({locale:recogLoc(), ref:lastAsk.say, assess:true, live:$("#practiceLive")});
     askRecMode="p"; b.classList.add("rec"); b.textContent="⏹ Done";
   }catch(e){ toast(e.message,4000); }
 }
@@ -1243,7 +1298,7 @@ $("#setClose").onclick=()=>{ if(needKeys()){ toast("Add your keys to continue");
 $("#openSettings").onclick=openSettings;
 $("#testKeys").onclick=async()=>{
   readSettings(); unlockAudio(); const out=$("#testOut"); out.textContent="Testing…"; let msg=[];
-  try{ await say("¡Hola! Las claves de Azure funcionan."); msg.push("✓ Azure voice OK"); }catch(e){ msg.push("✗ Azure: "+e.message); }
+  try{ await say(LG.test); msg.push("✓ Azure voice OK"); }catch(e){ msg.push("✗ Azure: "+e.message); }
   try{ await claude("Reply with the single word: ok",[{role:"user",content:"ping"}],10); msg.push("✓ Claude OK"); }catch(e){ msg.push("✗ "+e.message); }
   out.textContent=msg.join("  ·  ");
 };
@@ -1351,7 +1406,7 @@ function renderProgress(){
     <div class="tile"><div class="v">${Object.keys(V.learned).filter(k=>{const s=VOCAB.find(x=>x.id===k);return s&&V.learned[k].length===s.w.length;}).length}/${VOCAB.length}</div><div class="k">vocab sets complete</div></div>
     <div class="tile"><div class="v">${streak()}🔥</div><div class="k">day streak</div></div>
     <div class="tile"><div class="v">${mean(S5.map(s=>s.avgPron))??"–"}</div><div class="k">pronunciation (last 5)</div></div>
-    <div class="tile"><div class="v">${mins<60?mins+"m":(mins/60).toFixed(1)+"h"}</div><div class="k">time speaking Spanish</div></div>
+    <div class="tile"><div class="v">${mins<60?mins+"m":(mins/60).toFixed(1)+"h"}</div><div class="k">time speaking ${LG.name}</div></div>
   </div>`;
   h+=`<div class="sec"><h3>Pronunciation per session</h3>${trendSVG()}</div>`;
   // level
@@ -1415,7 +1470,7 @@ Often-mispronounced words: ${topTrouble(8).join(", ")||"none yet"}.
 Recent sessions:\n${recent}`;
   try{
     const d=await claudeJSON(
-`You are a Spanish speaking coach designing the learner's next block of practice in a conversation app. Each session is a 10-15 minute spoken roleplay with an AI tutor that corrects them.
+`You are a ${LG.name} speaking coach designing the learner's next block of practice in a conversation app. Each session is a 10-15 minute spoken roleplay with an AI tutor that corrects them.
 Available scenarios: ${ids}, or "custom" with your own situation.
 Design 5 sessions that (1) target the open weak spots and tricky words, (2) build toward the next level's targets, (3) vary situations so it stays interesting, and (4) get slightly harder through the block. If there's no history yet, start with a gentle mix and make session 1 a baseline.
 Respond ONLY with JSON:
@@ -1543,10 +1598,63 @@ function spTips(text){
   return t;
 }
 
+// French and German: rule-based sound tips, plus a hand-checked respelling for every vocab word.
+function frTips(text){
+  const t=[], w=" "+String(text).toLowerCase().replace(/[’']/g,"' ")+" ", add=(k,s)=>{ if(!t.some(x=>x.k===k)) t.push({k,s}); };
+  if(/(an|am|en|em|on|om|in|im|ain|ein|un|um)([^aeiouyéèênm]|\s)/.test(w)) add("nasal","Nasal vowel (an/en, on, in/ain): let the air go through your nose and don't actually say the n. maison = meh-ZOH(n).");
+  if(/(^|[^oa])u/.test(w.replace(/[aeo]u/g,""))) add("u","French u: say 'ee', then round your lips tight like a whistle. It's not 'oo' (that's ou).");
+  if(/ou/.test(w)) add("ou","ou is 'oo' as in 'food': rouge = ROOZH.");
+  if(/eu|œu/.test(w)) add("eu","eu / œu: say 'eh' with rounded lips, close to the u in 'fur' without the r.");
+  if(/r/.test(w)) add("r","French r is made in the back of the throat, a light gargle. Keep the tip of your tongue down behind your bottom teeth.");
+  if(/[a-zé][dstxzp]s?\s/.test(w)) add("final","Final d, s, t, x, z and p are usually silent: petit = puh-TEE, les fraises = lay FREHZ.");
+  if(/j|g[eiy]/.test(w)) add("j","j (and g before e/i) is 'zh', like the s in 'measure'.");
+  if(/ch/.test(w)) add("ch","ch is 'sh': chat = SHAH.");
+  if(/gn/.test(w)) add("gn","gn is 'ny' as in 'canyon': champignon = shahm-pee-NYOH(n).");
+  if(/é|ez\s|er\s/.test(w)) add("é","é (and final -er / -ez) is a tight 'ay' with no glide at the end.");
+  if(/[èê]|ai/.test(w)) add("è","è, ê and ai are an open 'eh' as in 'bed'.");
+  if(/(^|\s)h/.test(w)) add("h","h is always silent: l'hôtel = loh-TEL.");
+  if(/oi/.test(w)) add("oi","oi is 'wah': moi = MWAH.");
+  add("vowels","Give every syllable the same weight, with a light lift on the last one. Keep vowels pure and short, no English glide.");
+  return t;
+}
+function deTips(text){
+  const t=[], w=" "+String(text).toLowerCase()+" ", add=(k,s)=>{ if(!t.some(x=>x.k===k)) t.push({k,s}); };
+  if(/(a|o|u|au)ch/.test(w)) add("ach","ch after a, o, u or au is a raspy 'kh' at the back of the throat, like Scottish 'loch': Buch = BOOKH.");
+  if(/([eiäöüylnr]|^|\s)ch/.test(w.replace(/(a|o|u)ch/g,""))) add("ich","ch after e, i, ä, ö, ü or a consonant is a soft hiss: whisper the 'h' in 'huge'. Not 'k' and not 'sh'.");
+  if(/ü/.test(w)) add("ü","ü: say 'ee', then round your lips tight.");
+  if(/ö/.test(w)) add("ö","ö: say 'eh' with your lips rounded, like the u in 'fur' with no r.");
+  if(/ei|ie/.test(w)) add("ei","ei = 'eye', ie = 'ee'. Trick: say the second letter's English name.");
+  if(/eu|äu/.test(w)) add("eu","eu and äu sound like the 'oy' in 'boy': heute = HOY-tuh.");
+  if(/w/.test(w)) add("w","w sounds like English v: Wasser = VAH-suh.");
+  if(/(^|\s)v/.test(w)) add("v","v usually sounds like f: Vater = FAH-tuh, Vogel = FOH-gul.");
+  if(/z/.test(w)) add("z","z is 'ts' as in 'cats': Zeit = TSITE.");
+  if(/(^|\s)(st|sp)/.test(w)) add("st","At the start of a word st and sp are 'sht' and 'shp': Straße = SHTRAH-suh.");
+  if(/sch/.test(w)) add("sch","sch is 'sh'.");
+  if(/er(\s|n\s)|r/.test(w)) add("r","German r is a soft gargle at the back of the throat. At the end of a word, -er becomes a relaxed 'uh': Lehrer = LAIR-uh.");
+  if(/[bdg]\s/.test(w)) add("final","b, d and g at the end of a word sound like p, t, k: Hund = HOONT, Tag = TAHK.");
+  if(/(^|\s)s[aeiouäöü]/.test(w)) add("s","s before a vowel buzzes like a 'z': Sonne = ZON-uh.");
+  if(/j/.test(w)) add("j","j is 'y': ja = YAH.");
+  add("vowels","Stress usually falls on the first syllable. A vowel before a double consonant is short (Bett); before h or a single consonant it's long (Boot).");
+  return t;
+}
+const PHON=new Map(), PHONW=new Map();
+function addPhon(text, phon){
+  if(!phon) return; PHON.set(noAcc(text),phon);
+  const ws=String(text).split(/\s+/), ps=String(phon).split(/\s+/);
+  if(ws.length===ps.length) ws.forEach((w,i)=>{ const k=noAcc(w); if(k&&!PHONW.has(k)) PHONW.set(k,ps[i]); });
+}
+const tipsOf=text=>LANG==="fr"?frTips(text):LANG==="de"?deTips(text):spTips(text);
+function phonOf(text){
+  if(LANG==="es") return spPhonetic(text);
+  const p=PHON.get(noAcc(text)); if(p) return {phon:p,syl:""};
+  const ws=String(text).split(/\s+/).filter(Boolean).map(w=>PHONW.get(noAcc(w)));
+  return {phon:ws.every(Boolean)?ws.join(" "):"", syl:""};
+}
+const wordPhon=w=>LANG==="es"?spWordPhon(w).phon:(PHONW.get(noAcc(w))||PHON.get(noAcc(w))||"");
 function howToHTML(text,open){
-  const p=spPhonetic(text), tips=spTips(text).slice(0,4);
+  const p=phonOf(text), tips=tipsOf(text).slice(0,4);
   return `<details class="howto"${open?" open":""}><summary>🗣️ How to say it</summary>
-    <div class="phon-big">${esc(p.phon)}</div><div class="note" style="margin:2px 0 8px">Syllables: ${p.syl} <span style="opacity:.8">(bold = stressed)</span></div>
+    ${p.phon?`<div class="phon-big">${esc(p.phon)}</div>`:""}${p.syl?`<div class="note" style="margin:2px 0 8px">Syllables: ${p.syl} <span style="opacity:.8">(bold = stressed)</span></div>`:p.phon?`<div class="note" style="margin:2px 0 8px">CAPS = stressed</div>`:""}
     <ul>${tips.map(t=>`<li>${esc(t.s)}</li>`).join("")}</ul>
     <div class="row"><button class="btn ghost" data-say="${esc(text)}" data-rate="-10%">▶︎ Normal</button><button class="btn ghost" data-say="${esc(text)}" data-rate="-45%">🐢 Very slow</button></div></details>`;
 }
@@ -1560,16 +1668,16 @@ function pronFeedbackHTML(target, t, matched){
   }
   // score each target word by the matching heard word
   const scored=tw.map(x=>{ const m=words.find(w=>noAcc(w.w)===noAcc(x)); return {w:x, s:m?m.s:null}; });
-  const weak=scored.filter(x=>x.s!=null&&x.s<85&&!/^(el|la|los|las|un|una)$/i.test(x.w)).sort((a,b)=>a.s-b.s);
+  const weak=scored.filter(x=>x.s!=null&&x.s<85&&!new RegExp(`^(${LG.arts})$`,"i").test(noAcc(x.w))).sort((a,b)=>a.s-b.s);
   const score=t.pron??t.acc??0;
   const verdict=score>=90?"🌟 Excellent! That sounds native-like.":score>=80?"👍 Good! A little polish:":score>=65?"🙂 Close. Work on:":"💪 Let's fix a few sounds:";
   let tips="";
   if(weak.length){
-    tips=weak.slice(0,2).map(x=>{ const tp=spTips(x.w).filter(k=>x.s<70||k.k!=="vowels").slice(0,2);
-      return `<div class="pfix"><div><b class="tw" data-w="${esc(x.w)}">${esc(x.w)}</b> <span class="pill ${cls(x.s)}">${x.s}</span> · <span class="note" style="margin:0">${esc(spWordPhon(x.w).phon)}</span>
-        <button class="play" data-say="${esc(x.w)}" data-rate="-45%" style="float:right">🐢</button></div><ul>${(()=>{ const ph=spWordPhon(x.w).phon, st=ph.split("-").find(s=>/[A-Z]/.test(s)); return st?`<li>Put the stress on <b>${esc(st)}</b>: ${esc(ph)}.</li>`:""; })()}${tp.map(k=>`<li>${esc(k.s)}</li>`).join("")}</ul></div>`; }).join("");
+    tips=weak.slice(0,2).map(x=>{ const tp=tipsOf(x.w).filter(k=>x.s<70||k.k!=="vowels").slice(0,2);
+      return `<div class="pfix"><div><b class="tw" data-w="${esc(x.w)}">${esc(x.w)}</b> <span class="pill ${cls(x.s)}">${x.s}</span> · <span class="note" style="margin:0">${esc(wordPhon(x.w))}</span>
+        <button class="play" data-say="${esc(x.w)}" data-rate="-45%" style="float:right">🐢</button></div><ul>${(()=>{ const ph=wordPhon(x.w), st=ph.split("-").find(s=>/[A-Z]/.test(s)); return st?`<li>Put the stress on <b>${esc(st)}</b>: ${esc(ph)}.</li>`:""; })()}${tp.map(k=>`<li>${esc(k.s)}</li>`).join("")}</ul></div>`; }).join("");
   } else if(score<90){
-    const st=spPhonetic(target).phon.split(" ").find(x=>/[A-Z]/.test(x));
+    const st=phonOf(target).phon.split(" ").find(x=>/[A-Z]/.test(x));
     tips=`<div class="pfix"><ul><li>Every word scored well. To sound even more natural, lean into the stressed syllable${st?` (<b>${esc(st)}</b>)`:""} and keep vowels short and crisp.</li></ul></div>`;
   }
   return `<div style="text-align:center;font-weight:700;margin-bottom:6px">${verdict}</div>${pills}${chips}${tips}`;
@@ -1695,21 +1803,22 @@ const VOCAB=[
   ["👅","la lengua","tongue"],["✋","la mano","hand","manos"],["🦶","el pie","foot","pies"],["🦵","la pierna","leg","piernas"],["💪","el brazo","arm","brazos"],
   ["🧠","el cerebro","brain"],["❤️","el corazón","heart"],["💇","el pelo","hair","cabello"],["☝️","el dedo","finger / thumb","dedos|pulgar"],["🦴","el hueso","bone"],["🧔","la barba","beard"]]}
 ];
-const VKEY="hablemos.vocab.v1";
+const VKEY="hablemos.vocab.v1"+(LANG==="es"?"":"."+LANG);
 let V=(()=>{ try{ return Object.assign({learned:{},stats:{}},JSON.parse(localStorage.getItem(VKEY)||"{}")); }catch(e){ return {learned:{},stats:{}}; } })();
 function saveV(){ try{ localStorage.setItem(VKEY,JSON.stringify(V)); }catch(e){} }
-const noAcc=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-zñ\s]/g," ").replace(/\s+/g," ").trim();
-const ARTS=/^(el|la|los|las|un|una|unos|unas)\s+/;
+const noAcc=s=>String(s||"").replace(/ß/g,"ss").replace(/œ/g,"oe").replace(/æ/g,"ae").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-zñ\s]/g," ").replace(/\s+/g," ").trim();
+const ARTS=new RegExp(`^(${LG.arts})(\\s+|['’])`,"i");
+const FILL=new RegExp(`\\b(${LG.fill})\\b`,"g");
 function vocabTargets(card){
   const list=[card[1]].concat(card[3]?card[3].split("|"):[]);
   // strip the same filler words vocabMatch strips from what was heard (e.g. "está lloviendo" -> "lloviendo")
-  return [...new Set(list.map(x=>noAcc(x).replace(ARTS,"").replace(/\b(el|la|los|las|un|una|unos|unas|es|son|eso|esto|este|esta)\b/g," ").replace(/\s+/g," ").trim()).filter(Boolean))];
+  return [...new Set(list.map(x=>noAcc(x).replace(ARTS,"").replace(FILL," ").replace(/\s+/g," ").trim()).filter(Boolean))];
 }
 // Did what they said contain the word (article optional, singular/plural forgiven)?
 function vocabMatch(card, heard){
-  const h=" "+noAcc(heard).replace(/\b(el|la|los|las|un|una|unos|unas|es|son|eso|esto|este|esta)\b/g," ").replace(/\s+/g," ").trim()+" ";
+  const h=" "+noAcc(heard).replace(FILL," ").replace(/\s+/g," ").trim()+" ";
   for(const t of vocabTargets(card)){
-    const forms=[t, t+"s", t+"es", t.replace(/es$/,""), t.replace(/s$/,"")];
+    const forms=[t, t+"s", t+"es", t.replace(/es$/,""), t.replace(/s$/,"")].concat(LANG==="de"?[t+"e",t+"n",t+"en",t+"er",t.replace(/e?n$/,"")]:LANG==="fr"?[t+"x",t.replace(/x$/,"")]:[]);
     if(forms.some(f=>f&&h.includes(" "+f+" "))) return true;
   }
   return false;
@@ -1749,7 +1858,7 @@ function renderCard(){
   $("#deckBar").style.width=Math.round(100*n/total)+"%";
   const box=$("#cardBox");
   if(!deck.queue.length){
-    box.innerHTML=`<div class="vdone"><div style="font-size:64px">🎉</div><h2>¡Todo listo!</h2><p class="note">You learned all ${total} words in ${esc(s.t)}.</p>
+    box.innerHTML=`<div class="vdone"><div style="font-size:64px">🎉</div><h2>${LG.done}</h2><p class="note">You learned all ${total} words in ${esc(s.t)}.</p>
       <div style="height:10px"></div><button class="btn" id="deckAgain">Reset and practice again</button><div style="height:10px"></div><button class="btn ghost" id="deckBack2">Pick another set</button></div>`;
     $("#deckAgain").onclick=()=>{ V.learned[s.id]=[]; saveV(); startDeck(s.id); };
     $("#deckBack2").onclick=()=>openSet(s.id);
@@ -1786,7 +1895,7 @@ function listenOnce(){
   return new Promise((res,rej)=>{
     const sdk=window.SpeechSDK; let cfg;
     try{ cfg=speechConfig(); }catch(e){ return rej(e); }
-    cfg.speechRecognitionLanguage=RECOG_LOCALE; cfg.outputFormat=sdk.OutputFormat.Detailed;
+    cfg.speechRecognitionLanguage=recogLoc(); cfg.outputFormat=sdk.OutputFormat.Detailed;
     if(sdk.PropertyId.SpeechServiceConnection_EndSilenceTimeoutMs!==undefined) cfg.setProperty(sdk.PropertyId.SpeechServiceConnection_EndSilenceTimeoutMs,"700");
     if(sdk.PropertyId.SpeechServiceConnection_InitialSilenceTimeoutMs!==undefined) cfg.setProperty(sdk.PropertyId.SpeechServiceConnection_InitialSilenceTimeoutMs,"6000");
     const ac=sdk.AudioConfig.fromDefaultMicrophoneInput(); const r=new sdk.SpeechRecognizer(cfg,ac);
@@ -1819,13 +1928,13 @@ async function vocabMic(){
   if(ok){
     $("#vEs").classList.add("on");
     const clean=!deck.peekedEs;
-    res.innerHTML=`<div class="ok" style="font-size:18px">✓ ¡Correcto!</div><div style="text-align:left">${pronFeedbackHTML(c[1],t,true)}</div>
+    res.innerHTML=`<div class="ok" style="font-size:18px">✓ ${LG.correct}</div><div style="text-align:left">${pronFeedbackHTML(c[1],t,true)}</div>
       <div class="note">${clean?"Card learned. It's out of the deck.":"Good! You peeked, so it'll come back once more."}${t.pron!=null&&t.pron<60?" Tap the word above to hear it, and work on the sound.":""}</div>`;
     say(c[1],"-15%");
     setTimeout(()=>{ if(deck&&deck.set.w[deck.queue[0]]===c) nextCard(clean); },3800);
   } else {
     res.innerHTML=`<div class="err">Not quite. I heard: "${esc(t.text)}"</div><div style="margin-top:6px">${pr}</div>
-      <div class="note">${deck.tries>=2?"Showing the answer. Listen, then try saying it.":"Try again, or tap Show Spanish."}</div>`;
+      <div class="note">${deck.tries>=2?"Showing the answer. Listen, then try saying it.":`Try again, or tap Show ${LG.name}.`}</div>`;
     if(deck.tries>=2){ revealEs(false); }
   }
 }
@@ -1837,6 +1946,8 @@ $("#vSkip").onclick=()=>{ if(deck&&deck.queue.length) nextCard(false); };
 $("#cardBox").addEventListener("click",e=>{ const b=e.target.closest("[data-say]"); if(b) say(b.dataset.say,b.dataset.rate||"-15%"); });
 $("#deckBack").onclick=()=>openSet(deck.set.id);
 $("#vocabBack").onclick=goHome;
+$("#openConvo").onclick=()=>{ renderScenarios(); show("s-convo"); };
+$("#convoBack").onclick=goHome;
 $("#openVocab").onclick=openVocab;
 $("#deckReset").onclick=()=>{
   const b=$("#deckReset");
@@ -1975,7 +2086,7 @@ function renderQuiz(){
   const c=g.queue[0], opts=shuffle([c].concat(distractors(s,c,3)));
   const type=(g.n++%2===0)?"pic2word":"word2pic";
   if(type==="pic2word"){
-    gbody(`<div class="note" style="text-align:center;margin:0">What is this in Spanish?</div>
+    gbody(`<div class="note" style="text-align:center;margin:0">What is this in ${LG.name}?</div>
       <div class="vcard pop" style="padding-bottom:8px">${vocabPic(c,true)}</div>
       <div class="opts">${opts.map((o,k)=>`<button class="opt" data-k="${k}">${esc(o[1])}</button>`).join("")}</div>`);
   } else {
@@ -2011,7 +2122,7 @@ function startMatch(){
 function renderMatch(){
   const g=game, round=g.rounds[g.r];
   g.left=shuffle(round.slice()); g.right=shuffle(round.slice()); g.done=new Set(); g.sel=null;
-  gbody(`<div class="note" style="text-align:center;margin:0 0 10px">Tap a picture, then its Spanish word.</div>
+  gbody(`<div class="note" style="text-align:center;margin:0 0 10px">Tap a picture, then its ${LG.name} word.</div>
     <div class="mgrid"><div class="mcol">${g.left.map((c,k)=>`<button class="mt pic" data-side="L" data-k="${k}">${vocabPic(c,false)}</button>`).join("")}</div>
     <div class="mcol">${g.right.map((c,k)=>`<button class="mt" data-side="R" data-k="${k}">${esc(c[1])}</button>`).join("")}</div></div>`);
   $("#gameBody").querySelectorAll(".mt").forEach(b=>b.onclick=()=>matchTap(b));
@@ -2167,7 +2278,7 @@ function openWordList(filter){
   gameShell("📋 "+s.t, `${s.w.length} words · ✓ = said without help · 📖 = studied`);
   const q=noAcc(game.filter);
   const rows=s.w.map((c,i)=>({c,i})).filter(({c})=>!q||noAcc(c[1]+" "+c[2]).includes(q));
-  gbody(`<input id="wlSearch" placeholder="Search Spanish or English…" value="${esc(game.filter)}" autocapitalize="off" style="margin-bottom:10px">
+  gbody(`<input id="wlSearch" placeholder="Search ${LG.name} or English…" value="${esc(game.filter)}" autocapitalize="off" style="margin-bottom:10px">
     <div class="wlist">${rows.map(({c,i})=>`<button class="wrow" data-i="${i}"><span class="wpic">${vocabPic(c,false)}</span><span class="wes">${esc(c[1])}</span><span class="wen">${esc(c[2])}</span><span class="wst">${learned.has(c[1])?"✓":studied.has(c[1])?"📖":""}</span></button>`).join("")||`<p class="note">No matches.</p>`}</div>`);
   const inp=$("#wlSearch");
   inp.oninput=()=>{ const v=inp.value, pos=inp.selectionStart; openWordList(v); const n=$("#wlSearch"); n.focus(); try{ n.setSelectionRange(pos,pos); }catch(e){} };
@@ -2221,7 +2332,28 @@ const SCENES=[
 ];
 const SET_SCENE={fruits:"market",veg:"market",office:"office",electronics:"techstore",mechanic:"garage",kitchen:"kitchen",drinks:"kitchen",
   restaurant:"restaurant",food:"restaurant",house:"home",clothes:"shop",store:"shop",animals:"farm",transport:"street",colors:"paint",basics:"home",body:"home",feelings:"park",weather:"forecast"};
+const pickOne=a=>a[Math.floor(Math.random()*a.length)];
+function findPromptFr(c){
+  const w=c[1];
+  if(c[5]==="adj") return pickOne(/^j'/.test(w)?[`Qui dit : ${w} ?`,`Trouve quelqu'un qui dit : ${w}.`]:[`Qui est ${w} ?`,`Trouve quelqu'un qui est ${w}.`,`Trouve le visage : ${w}.`]);
+  if(c[5]==="action") return pickOne([`Qui ${c[6]} ?`,`Trouve quelqu'un qui ${c[6]}.`,`Touche la personne qui ${c[6]}.`]);
+  if(c[5]==="phrase") return pickOne([`Touche le dessin : ${w}.`,`Cherche : ${w}.`,`Trouve : ${w}.`]);
+  const isColor=c[0].startsWith("#")||c[5]==="color", x=isColor?"la couleur "+w:w, pl=isPl(w);
+  const de=x.replace(/^le /,"du ").replace(/^les /,"des ").replace(/^(la |l')/,"de $1");
+  return pickOne([`Où ${pl?"sont":"est"} ${x} ?`,`Trouve ${x}.`,`Cherche ${x}, s'il te plaît.`,`Tu me passes ${x} ?`,`J'ai besoin ${de.startsWith("de ")||de.startsWith("du ")||de.startsWith("des ")?de:"de "+de}.`]);
+}
+function findPromptDe(c){
+  const w=c[1];
+  if(c[5]==="adj") return pickOne(/^(ich|mir) /.test(w)?[`Wer sagt: ${w}?`,`Finde jemanden, der sagt: ${w}.`]:[`Wer ist ${w}?`,`Finde das Gesicht: ${w}.`,`Zeig mir: ${w}.`]);
+  if(c[5]==="action") return pickOne([`Wer ${c[6]}?`,`Zeig mir: ${w}.`,`Tipp auf die Person: ${w}.`]);
+  if(c[5]==="phrase") return pickOne([`Tipp auf das Bild: ${w}.`,`Such: ${w}.`,`Finde: ${w}.`]);
+  const isColor=c[0].startsWith("#")||c[5]==="color", x=isColor?"die Farbe "+cap(w):w, pl=isPl(w);
+  const acc=c[7]==="m"?x.replace(/^der /,"den "):x;
+  return pickOne([`Wo ${pl?"sind":"ist"} ${x}?`,`Finde ${acc}.`,`Such bitte ${acc}.`,`Gibst du mir ${acc}?`,`Ich brauche ${acc}.`]);
+}
 function findPrompt(c){
+  if(LANG==="fr") return findPromptFr(c);
+  if(LANG==="de") return findPromptDe(c);
   if(c[5]==="adj"){ const a=c[1].startsWith("tengo")?[`¿Quién dice: ${c[1]}?`,`Busca a alguien que dice: ${c[1]}.`]:[`¿Quién está ${c[1]}?`,`Busca a alguien que está ${c[1]}.`,`Encuentra la cara: ${c[1]}.`]; return a[Math.floor(Math.random()*a.length)]; }
   if(c[5]==="action"){ const a=[`¿Quién está ${c[1]}?`,`Busca a alguien que está ${c[1]}.`,`Toca a la persona que está ${c[1]}.`]; return a[Math.floor(Math.random()*a.length)]; }
   if(c[5]==="phrase"){ const a=[`Toca el dibujo: ${c[1]}.`,`Busca: ${c[1]}.`,`Encuentra: ${c[1]}.`]; return a[Math.floor(Math.random()*a.length)]; }
@@ -2315,8 +2447,8 @@ function renderFind(){
     } else {
       g.tries++; g.misses++; if(!g.missed.includes(c)) g.missed.push(c);
       b.classList.add("hitbad"); setTimeout(()=>b.classList.remove("hitbad"),500);
-      $("#fMsg").innerHTML=`<span class="err">Eso es ${esc(it[1])}</span> <span class="note">(${esc(it[2])})</span>`;
-      chime(false); say("No, eso es "+it[1],"-10%");
+      $("#fMsg").innerHTML=`<span class="err">${LG.thatIs} ${esc(it[1])}</span> <span class="note">(${esc(it[2])})</span>`;
+      chime(false); say(LG.noThatIs+" "+it[1],"-10%");
       if(g.tries>=2){ const t=$("#sceneBox").querySelector(`[data-k="${g.board.indexOf(c)}"]`); if(t) t.classList.add("glow"); }
     }
   });
@@ -2358,7 +2490,7 @@ function sceneHTML(g,hi){
 let nameRec=null, nameAc=null, nameT0=0;
 function startNameStream(onFinal,onPartial){
   const sdk=window.SpeechSDK; const cfg=speechConfig();
-  cfg.speechRecognitionLanguage=RECOG_LOCALE; cfg.outputFormat=sdk.OutputFormat.Detailed;
+  cfg.speechRecognitionLanguage=recogLoc(); cfg.outputFormat=sdk.OutputFormat.Detailed;
   cfg.setProperty(sdk.PropertyId.Speech_SegmentationSilenceTimeoutMs,"600");
   nameAc=sdk.AudioConfig.fromDefaultMicrophoneInput(); nameRec=new sdk.SpeechRecognizer(cfg,nameAc);
   DBG.log("mic","Name it stream start"); hookRecLog(nameRec,"name");
@@ -2382,7 +2514,7 @@ function stopNameStream(){
 async function renderName(){
   const g=game;
   if(!g.started){
-    gbody(`<div class="helper"><span class="hav">${g.sc.helper}</span><div class="bubble"><div class="hn">${esc(g.sc.name)}</div><div class="ht">¿Cómo se llama? Say each item as fast as you can!</div></div></div>
+    gbody(`<div class="helper"><span class="hav">${g.sc.helper}</span><div class="bubble"><div class="hn">${esc(g.sc.name)}</div><div class="ht">${LG.nameQ} Say each item as fast as you can!</div></div></div>
       <div class="note" style="margin:10px 0">${g.targets.length} items. Tap Start once and the mic stays on for the whole round. Each item lights up, just say it. You get 3 tries per item. Score: accuracy 50 (30 on try 2, 15 on try 3) + pronunciation 30 + speed 20 (full bonus under ~1.5s).</div>
       ${sceneHTML(g,-1)}<div style="height:12px"></div><button class="btn" id="nStart">Start ▶︎</button>`);
     $("#nStart").onclick=()=>{
@@ -2520,45 +2652,314 @@ const SE_RULES={
   action:["ESTAR","Action in progress","estar + -ando/-iendo: Estoy comiendo. Están hablando."],
   tricky:["BOTH","Meaning changes","Some words mean different things: ser aburrido = boring / estar aburrido = bored; ser listo = smart / estar listo = ready; ser rico = rich / estar rico = tastes good."]
 };
-const GKEY="gram_serestar";
-const isSer=f=>["soy","eres","es","somos","son"].includes(f.toLowerCase());
+
+/* ---------- two-verb topics for French (être vs avoir) and German (sein vs haben) ----------
+   Same games as Ser vs Estar: [sentence with ___, right form, wrong form, rule key, English, key word] */
+const TV_FR={key:"gram_etreavoir",title:"Être vs Avoir",ic:"⚖️",A:"être",B:"avoir",
+ sub:"English says \"I'm hungry, I'm 30\". French says \"I have hunger, I have 30 years\". Plus which one builds the past.",
+ lessonSub:"When French uses avoir where English says \"to be\", conjugations, and the past tense helper",
+ sprintSub:"Tap the right form (suis / ai, est / a…) as fast as you can. Streaks multiply your points.",
+ isA:f=>["suis","es","est","sommes","êtes","sont"].includes(String(f).toLowerCase().split(/\s+/).pop()),
+ items:[
+ ["___ américain.","Je suis","J'ai","identity","I'm American.","americain"],
+ ["Ma sœur ___ médecin.","est","a","job","My sister is a doctor.","medecin"],
+ ["Nous ___ de Virginie.","sommes","avons","identity","We're from Virginia.","virginie"],
+ ["La maison ___ grande.","est","a","desc","The house is big.","grande"],
+ ["Il ___ huit heures.","est","a","time","It's eight o'clock.","heures"],
+ ["Tu ___ très intelligent.","es","as","desc","You're very smart.","intelligent"],
+ ["Les clés ___ sur la table.","sont","ont","loc","The keys are on the table.","table"],
+ ["Mon frère ___ au travail.","est","a","loc","My brother is at work.","travail"],
+ ["___ fatigué.","Je suis","J'ai","mood","I'm tired.","fatigue"],
+ ["Elle ___ contente aujourd'hui.","est","a","mood","She's happy today.","contente"],
+ ["Le magasin ___ fermé.","est","a","desc","The store is closed.","ferme"],
+ ["Vous ___ très gentils.","êtes","avez","desc","You all are very kind.","gentils"],
+ ["___ trente ans.","J'ai","Je suis","age","I'm thirty (years old).","trente"],
+ ["Mon fils ___ dix ans.","a","est","age","My son is ten.","dix"],
+ ["___ faim.","J'ai","Je suis","sens","I'm hungry.","faim"],
+ ["Tu ___ soif ?","as","es","sens","Are you thirsty?","soif"],
+ ["Nous ___ froid.","avons","sommes","sens","We're cold.","froid"],
+ ["Il ___ chaud.","a","est","sens","He's hot (he feels hot).","chaud"],
+ ["Elle ___ peur des chiens.","a","est","sens","She's afraid of dogs.","peur"],
+ ["___ sommeil.","J'ai","Je suis","sens","I'm sleepy.","sommeil"],
+ ["Vous ___ raison.","avez","êtes","expr","You're right.","raison"],
+ ["Tu ___ tort.","as","es","expr","You're wrong.","tort"],
+ ["___ besoin d'aide.","J'ai","Je suis","expr","I need help.","besoin"],
+ ["Ils ___ deux enfants.","ont","sont","poss","They have two kids.","enfants"],
+ ["___ mangé une pizza.","J'ai","Je suis","pcavoir","I ate a pizza.","mange"],
+ ["Nous ___ fini le travail.","avons","sommes","pcavoir","We finished the work.","fini"],
+ ["Elle ___ regardé un film.","a","est","pcavoir","She watched a movie.","regarde"],
+ ["Ils ___ acheté une voiture.","ont","sont","pcavoir","They bought a car.","achete"],
+ ["Tu ___ parlé avec ton chef ?","as","es","pcavoir","Did you talk with your boss?","parle"],
+ ["___ allé au marché.","Je suis","J'ai","pcetre","I went to the market.","alle"],
+ ["Elle ___ partie ce matin.","est","a","pcetre","She left this morning.","partie"],
+ ["Nous ___ arrivés en retard.","sommes","avons","pcetre","We arrived late.","arrives"],
+ ["Ils ___ restés à la maison.","sont","ont","pcetre","They stayed home.","restes"],
+ ["Il ___ né à Paris.","est","a","pcetre","He was born in Paris.","paris"],
+ ["Elle ___ tombée dans la rue.","est","a","pcetre","She fell in the street.","tombee"],
+ ["Je me ___ levé tôt.","suis","ai","pcrefl","I got up early.","leve"]],
+ rules:{
+  identity:["ÊTRE","Identity & origin","Who someone is and where they're from: Je suis américain. Nous sommes de Virginie."],
+  job:["ÊTRE","Jobs","Elle est médecin. (No un/une before a job after être.)"],
+  desc:["ÊTRE","Description & state","What something is like, or its state: La maison est grande. Le magasin est fermé."],
+  time:["ÊTRE","Clock time","Il est huit heures. (Weather uses faire: il fait chaud.)"],
+  loc:["ÊTRE","Location","Where someone or something is: Les clés sont sur la table."],
+  mood:["ÊTRE","Most feelings","Je suis fatigué. Elle est contente. But hungry, thirsty, hot, cold, afraid and sleepy use avoir."],
+  age:["AVOIR","Age","French HAS years: J'ai trente ans. Never je suis trente."],
+  sens:["AVOIR","Body feelings","avoir faim / soif / chaud / froid / peur / sommeil = be hungry / thirsty / hot / cold / afraid / sleepy. (Je suis chaud is slang for 'I'm up for it'!)"],
+  expr:["AVOIR","Avoir expressions","avoir raison = be right · avoir tort = be wrong · avoir besoin de = need · avoir envie de = feel like."],
+  poss:["AVOIR","Having","Possession: Ils ont deux enfants."],
+  pcavoir:["AVOIR","Past: most verbs","Most verbs build the passé composé with avoir: J'ai mangé. Nous avons fini."],
+  pcetre:["ÊTRE","Past: coming, going, staying","Movement and change verbs (aller, venir, partir, arriver, rester, tomber, naître, mourir…) use être, and the ending agrees: Je suis allé. Elle est partie. Nous sommes arrivés."],
+  pcrefl:["ÊTRE","Past: reflexive verbs","Every se verb uses être: Je me suis levé. Elle s'est assise."]},
+ lesson:{intro:`Both are everyday verbs. <b class="ser-t">ÊTRE</b> = to be. <b class="estar-t">AVOIR</b> = to have. The trap for English speakers: French uses <b>avoir</b> for a handful of things English says with "be", and both verbs are helpers for the past tense.`,
+  trick:`Memory trick: <b>"I HAVE hunger, thirst, heat, cold, fear and 30 years."</b>`,
+  conj:[["je / j'","suis","ai"],["tu","es","as"],["il / elle / on","est","a"],["nous","sommes","avons"],["vous","êtes","avez"],["ils / elles","sont","ont"]],
+  A:{title:"ÊTRE = who, what, where, how",rows:[["Identity","Je suis américain."],["Job","Elle est médecin."],["Description","La maison est grande."],["Location","Les clés sont sur la table."],["Feelings","Je suis fatigué."],["Clock time","Il est huit heures."]]},
+  B:{title:"AVOIR = have (and a few \"be\"s)",rows:[["Age","J'ai trente ans."],["Hungry / thirsty","J'ai faim. Tu as soif ?"],["Hot / cold","J'ai chaud. Nous avons froid."],["Afraid / sleepy","Elle a peur. J'ai sommeil."],["Right / wrong","Vous avez raison. Tu as tort."],["Need","J'ai besoin d'aide."]]},
+  past:{title:"Past tense: which helper?",text:`Most verbs: <b class="estar-t">avoir</b> + participle. Coming, going, staying, born, died, and every <i>se</i> verb: <b class="ser-t">être</b> + participle that agrees (add -e for her, -s for plural).`,rows:[["avoir","J'ai mangé une pizza."],["avoir","Nous avons fini."],["être","Je suis allé au marché."],["être","Elle est partie ce matin."],["être","Je me suis levé tôt."]]},
+  pairs:[["Il est froid.","He's cold (unfriendly), or it's cold to the touch.","Il a froid.","He feels cold."],["Je suis fini.","I'm done for!","J'ai fini.","I'm finished (with the task)."],["Je suis passé chez toi.","I came by your place.","J'ai passé un examen.","I took an exam."]]}
+};
+const TV_DE={key:"gram_seinhaben",title:"Sein vs Haben",ic:"⚖️",A:"sein",B:"haben",
+ sub:"German HAS hunger and thirst, IS 30 years old, and uses both verbs to build the past.",
+ lessonSub:"Where German uses haben for \"be\", conjugations, and which helper builds the past",
+ sprintSub:"Tap the right form (bin / habe, ist / hat…) as fast as you can. Streaks multiply your points.",
+ isA:f=>["bin","bist","ist","sind","seid"].includes(String(f).toLowerCase().split(/\s+/).pop()),
+ items:[
+ ["Ich ___ Amerikaner.","bin","habe","identity","I'm American.","amerikaner"],
+ ["Meine Schwester ___ Ärztin.","ist","hat","job","My sister is a doctor.","arztin"],
+ ["Wir ___ aus Virginia.","sind","haben","identity","We're from Virginia.","virginia"],
+ ["Das Haus ___ groß.","ist","hat","desc","The house is big.","gross"],
+ ["Du ___ sehr klug.","bist","hast","desc","You're very smart.","klug"],
+ ["Ihr ___ sehr nett.","seid","habt","desc","You all are very nice.","nett"],
+ ["Die Schlüssel ___ auf dem Tisch.","sind","haben","loc","The keys are on the table.","tisch"],
+ ["Mein Bruder ___ bei der Arbeit.","ist","hat","loc","My brother is at work.","arbeit"],
+ ["Ich ___ müde.","bin","habe","mood","I'm tired.","mude"],
+ ["Sie ___ heute glücklich.","ist","hat","mood","She's happy today.","glucklich"],
+ ["Ich ___ dreißig Jahre alt.","bin","habe","age","I'm thirty years old.","jahre"],
+ ["Mein Sohn ___ zehn.","ist","hat","age","My son is ten.","zehn"],
+ ["Es ___ acht Uhr.","ist","hat","time","It's eight o'clock.","uhr"],
+ ["Ich ___ Hunger.","habe","bin","sens","I'm hungry.","hunger"],
+ ["___ du Durst?","Hast","Bist","sens","Are you thirsty?","durst"],
+ ["Sie ___ Angst vor Hunden.","hat","ist","sens","She's afraid of dogs.","angst"],
+ ["Ich ___ Kopfschmerzen.","habe","bin","sens","I have a headache.","kopfschmerzen"],
+ ["Wir ___ keine Zeit.","haben","sind","expr","We don't have time.","zeit"],
+ ["Du ___ recht.","hast","bist","expr","You're right.","recht"],
+ ["Sie ___ zwei Kinder.","haben","sind","poss","They have two kids.","kinder"],
+ ["Ich ___ eine Pizza gegessen.","habe","bin","pfhaben","I ate a pizza.","gegessen"],
+ ["Wir ___ lange gearbeitet.","haben","sind","pfhaben","We worked a long time.","gearbeitet"],
+ ["Er ___ einen Film gesehen.","hat","ist","pfhaben","He watched a movie.","gesehen"],
+ ["___ du mit deinem Chef gesprochen?","Hast","Bist","pfhaben","Did you talk to your boss?","gesprochen"],
+ ["Sie ___ ein Auto gekauft.","haben","sind","pfhaben","They bought a car.","gekauft"],
+ ["Ich ___ gut geschlafen.","habe","bin","pfhaben","I slept well.","geschlafen"],
+ ["Ich ___ zum Markt gegangen.","bin","habe","pfsein","I went to the market.","gegangen"],
+ ["Sie ___ heute Morgen abgefahren.","ist","hat","pfsein","She left this morning.","abgefahren"],
+ ["Wir ___ zu spät angekommen.","sind","haben","pfsein","We arrived late.","angekommen"],
+ ["Er ___ nach Berlin geflogen.","ist","hat","pfsein","He flew to Berlin.","geflogen"],
+ ["Ich ___ sofort eingeschlafen.","bin","habe","pfsein","I fell asleep right away.","eingeschlafen"],
+ ["Sie ___ zu Hause geblieben.","sind","haben","pfsein","They stayed home.","geblieben"],
+ ["Ich ___ in Paris gewesen.","bin","habe","pfsein","I've been to Paris.","gewesen"]],
+ rules:{
+  identity:["SEIN","Identity & origin","Ich bin Amerikaner. Wir sind aus Virginia. (No ein/eine before a nationality or job.)"],
+  job:["SEIN","Jobs","Sie ist Ärztin. (No eine before a job.)"],
+  desc:["SEIN","Description","Das Haus ist groß. Du bist klug."],
+  loc:["SEIN","Location","Die Schlüssel sind auf dem Tisch."],
+  mood:["SEIN","Most feelings","Ich bin müde. Sie ist glücklich. (Feeling hot or cold is Mir ist kalt, not Ich bin kalt.)"],
+  age:["SEIN","Age","Like English: Ich bin dreißig (Jahre alt). Not haben (that's Spanish and French)."],
+  time:["SEIN","Clock time","Es ist acht Uhr."],
+  sens:["HABEN","Hunger, thirst, fear, pain","Ich habe Hunger / Durst / Angst / Kopfschmerzen. German HAS hunger."],
+  expr:["HABEN","Haben expressions","recht haben = be right · Zeit haben = have time · Glück haben = be lucky · Lust haben = feel like it."],
+  poss:["HABEN","Having","Possession: Sie haben zwei Kinder."],
+  pfhaben:["HABEN","Past (Perfekt): most verbs","Most verbs: haben + participle at the END: Ich habe eine Pizza gegessen."],
+  pfsein:["SEIN","Past: moving & changing","Going from A to B or changing state uses sein: Ich bin gegangen. Er ist geflogen. Ich bin eingeschlafen. Also sein and bleiben: ich bin gewesen, ich bin geblieben."]},
+ lesson:{intro:`<b class="ser-t">SEIN</b> = to be. <b class="estar-t">HABEN</b> = to have. German mostly matches English, with two traps: a few feelings use <b>haben</b>, and both verbs build the past tense.`,
+  trick:`Memory trick: <b>"I HAVE hunger, thirst, fear and pain, but I AM thirty."</b>`,
+  conj:[["ich","bin","habe"],["du","bist","hast"],["er / sie / es","ist","hat"],["wir","sind","haben"],["ihr","seid","habt"],["sie / Sie","sind","haben"]],
+  A:{title:"SEIN = who, what, where, how old",rows:[["Identity","Ich bin Amerikaner."],["Job","Sie ist Ärztin."],["Description","Das Haus ist groß."],["Location","Die Schlüssel sind auf dem Tisch."],["Feelings","Ich bin müde."],["Age","Ich bin dreißig Jahre alt."]]},
+  B:{title:"HABEN = have (and a few \"be\"s)",rows:[["Hungry","Ich habe Hunger."],["Thirsty","Hast du Durst?"],["Afraid","Sie hat Angst."],["Pain","Ich habe Kopfschmerzen."],["Right","Du hast recht."],["Time / luck","Wir haben keine Zeit. Ich habe Glück."]]},
+  past:{title:"Past tense (Perfekt): which helper?",text:`Most verbs: <b class="estar-t">haben</b> + participle at the end. Moving from A to B, changing state, plus sein and bleiben: <b class="ser-t">sein</b> + participle.`,rows:[["haben","Ich habe eine Pizza gegessen."],["haben","Er hat einen Film gesehen."],["sein","Ich bin zum Markt gegangen."],["sein","Er ist nach Berlin geflogen."],["sein","Ich bin sofort eingeschlafen."]]},
+  pairs:[["Ich bin kalt.","I'm cold-hearted.","Mir ist kalt.","I feel cold."],["Ich bin heiß.","I'm hot (sexy!).","Mir ist heiß.","I feel hot."],["Ich bin nach Hause gefahren.","I drove home (movement: sein).","Ich habe das Auto gefahren.","I drove the car (with an object: haben)."]]}
+};
+const TV_ES={key:"gram_serestar",title:"Ser vs Estar",ic:"⚖️",A:"ser",B:"estar",items:SE_ITEMS,rules:SE_RULES,
+ sub:'Both mean "to be." Learn when to use which.', lessonSub:"The rules (DOCTOR vs PLACE), conjugations and tricky words",
+ sprintSub:"Tap the right form (es / está, soy / estoy…) as fast as you can. Streaks multiply your points.",
+ isA:f=>["soy","eres","es","somos","son"].includes(f.toLowerCase())};
+const TV={es:TV_ES,fr:TV_FR,de:TV_DE}[LANG];
+const GKEY=TV.key;
+const isSer=f=>TV.isA(f);
+/* ---------- Grammar: noun gender (French le / la, German der / die / das) ----------
+   Built from the vocab nouns, so it grows with the word sets. */
+const GEN_KEY="gram_gender";
+const GEN={fr:{title:"Le ou la ?",arts:{m:"le",f:"la"},indef:{m:"un",f:"une"},names:{m:"masculine",f:"feminine"},
+  rules:[[/(tion|sion)$/,"f","-tion and -sion are feminine: la station, la télévision."],[/té$/,"f","-té is feminine: la liberté, la santé."],[/ette$/,"f","-ette is feminine: la fourchette, la serviette."],
+   [/ure$/,"f","-ure is usually feminine: la voiture, la confiture."],[/(ance|ence)$/,"f","-ance and -ence are feminine: la chance, la différence."],[/(ie)$/,"f","-ie is usually feminine: la pharmacie, la pluie."],
+   [/(elle|esse|ade|ière|ine|ise)$/,"f","-elle, -esse, -ade, -ière, -ine and -ise are usually feminine: la poubelle, la salade, la cuisine."],
+   [/age$/,"m","-age is masculine: le fromage, le garage (exceptions: la plage, la page, l'image)."],[/ment$/,"m","-ment is masculine: le vêtement, l'appartement."],
+   [/eau$/,"m","-eau is masculine: le gâteau, le bateau (exceptions: l'eau and la peau are feminine)."],[/(isme|oir|ier|er)$/,"m","-oir, -ier, -er and -isme are usually masculine: le miroir, le panier, le clavier."],
+   [/(on)$/,"m","-on is usually masculine: le citron, le crayon (but la maison and -tion/-sion are feminine)."],[/(et|ot|at|al|ail|eil|ou|o|in|is)$/,"m","Ending in a consonant, -o, -ou, -in or -is? Usually masculine: le lit, le stylo, le vin."],
+   [/e$/,"f","Ending in -e? Slightly more often feminine, but lots of exceptions (le livre, le beurre)."]],
+  tips:["l' hides the gender before a vowel or silent h, so learn those with un / une: un arbre, une orange.","All plurals use les, so the gender only shows in the singular.","Adjectives agree: un chat noir, une voiture noire."]},
+ de:{title:"Der, die oder das?",arts:{m:"der",f:"die",n:"das"},indef:{m:"ein",f:"eine",n:"ein"},names:{m:"masculine",f:"feminine",n:"neuter"},
+  rules:[[/(ung|heit|keit|schaft|ion|tät|ik|ei|ie|enz|anz|ur)$/,"f","-ung, -heit, -keit, -schaft, -ion, -tät, -ik, -ei and -ie are feminine: die Zeitung, die Rechnung."],
+   [/(chen|lein)$/,"n","-chen and -lein are always neuter: das Mädchen, das Brötchen."],[/(um|ment|ma|o)$/,"n","-um, -ment and -o are usually neuter: das Museum, das Auto, das Kino."],
+   [/^ge/,"n","Ge- nouns are often neuter: das Gemüse, das Gesicht, das Getränk."],[/(ling|ismus|or|ich|ig|ant|ist)$/,"m","-ling, -ismus, -or, -ich, -ig and -ist are masculine: der Teppich, der Honig, der Motor."],
+   [/er$/,"m","-er for people and tools is usually masculine: der Lehrer, der Computer, der Fernseher."],[/e$/,"f","Ending in -e? About 90% are feminine: die Blume, die Tasse (but der Käse, das Auge)."]],
+  tips:["Compound nouns take the gender of the LAST part: der Kühl·schrank, because der Schrank.","Every plural uses die: die Bäume, die Häuser.","Days, months, seasons and most alcohol are masculine (der Montag, der Wein), but das Bier."]}}[LANG]||null;
+function genItems(){
+  const skip=new Set(["colors","feelings","weather","actions"]), out=[], seen=new Set();
+  for(const s of VOCAB){ if(skip.has(s.id)) continue;
+    for(const c of s.w){ if(!GEN||!GEN.arts[c[7]]||seen.has(c[1])) continue; seen.add(c[1]);
+      const noun=c[1].replace(/^(le|la|der|die|das)\s+/i,"").replace(/^l['’]/i,""); if(!noun||/\s/.test(noun)&&LANG==="de") continue;
+      out.push({c,noun,g:c[7],el:/^l['’]/i.test(c[1])}); } }
+  return out;
+}
+function genHint(it){
+  const n=it.noun.toLowerCase().split(/\s+/)[0]; const r=GEN.rules.find(x=>x[0].test(n)); if(!r) return "";
+  return `<div class="note" style="margin:6px 0 0">${r[1]===it.g?"💡 ":"⚠️ Exception! "}${esc(r[2])}</div>`;
+}
+const genFull=it=>`${it.c[1]}${it.el?` (${GEN.indef[it.g]} ${it.noun})`:""}`;
+function genMenuBtn(){ const b=(V.best||{})[GEN_KEY]||{};
+  return `<button class="mode" data-topic="gender"><span class="mi">🎭</span><span><b>${esc(GEN.title)}</b><br><span class="note" style="margin:0">Every noun has a gender. Learn the patterns, then race through your vocab nouns.${b.quiz!=null?` Best quiz ${b.quiz}%.`:""}</span></span></button>`; }
+function openGenTopic(){
+  game=null; const b=V.best[GEN_KEY]||{}, n=genItems().length;
+  $("#setTitle").textContent="🎭 "+GEN.title;
+  $("#setBody").innerHTML=`<div class="tiles">
+      <div class="tile"><div class="v">${b.quiz!=null?b.quiz+"%":"–"}</div><div class="k">best multiple choice</div></div>
+      <div class="tile"><div class="v">${b.sprint??"–"}</div><div class="k">best sprint score</div></div>
+      <div class="tile"><div class="v">${n}</div><div class="k">nouns from your vocab</div></div></div>
+    <button class="mode" data-genmode="lesson"><span class="mi">📘</span><span><b>Lesson</b><br><span class="note" style="margin:0">Endings that give the gender away, and the exceptions</span></span></button>
+    <button class="mode" data-genmode="quiz"><span class="mi">🔤</span><span><b>Multiple choice</b><br><span class="note" style="margin:0">See the picture and the noun, pick ${Object.values(GEN.arts).join(" / ")}</span></span></button>
+    <button class="mode" data-genmode="sprint"><span class="mi">⚡</span><span><b>Gender sprint</b> · 60s<br><span class="note" style="margin:0">Tap the article as fast as you can. Streaks multiply your points.</span></span></button>`;
+  curSetId=null; $("#setBack").onclick=openGrammar; show("s-set");
+}
+$("#setBody").addEventListener("click",e=>{
+  const m=e.target.closest("[data-genmode]"); if(!m) return; e.stopPropagation(); unlockAudio();
+  ({lesson:genLesson,quiz:genQuiz,sprint:genSprint})[m.dataset.genmode]();
+},true);
+const genBack=()=>openGenTopic();
+const gcls=g=>({m:"gm",f:"gf",n:"gn"})[g]||"";
+function genLesson(){
+  game={kind:"lesson",back:genBack}; gameShell("📘 "+GEN.title,"");
+  const ex=genItems(); const byRule=GEN.rules.map(r=>{ const hits=ex.filter(it=>r[0].test(it.noun.toLowerCase().split(/\s+/)[0])&&it.g===r[1]).slice(0,3); return {r,hits}; });
+  gbody(`<div class="sec"><h3>Every noun is ${Object.values(GEN.names).join(LANG==="de"?", ":" or ").replace(/, (?=[^,]*$)/," or ")}</h3>
+      <p style="margin:0">${Object.entries(GEN.arts).map(([g,a])=>`<b class="${gcls(g)}">${a}</b> = ${GEN.names[g]}`).join(" · ")}</p>
+      <p class="note">There's no perfect rule, so always learn a noun <b>with</b> its article. But the ending often gives it away:</p></div>
+    <div class="sec"><h3>Endings</h3>${byRule.map(({r,hits})=>`<div style="margin-top:10px"><b class="${gcls(r[1])}">${esc(GEN.arts[r[1]])}</b> · ${esc(r[2])}${hits.length?`<div class="chips" style="margin-top:4px">${hits.map(h=>`<span class="pill tw" data-w="${esc(h.c[1])}">${esc(h.c[1])}</span>`).join("")}</div>`:""}</div>`).join("")}</div>
+    <div class="sec"><h3>Good to know</h3><ul style="margin:0;padding-left:18px">${GEN.tips.map(t=>`<li style="margin-top:6px">${esc(t)}</li>`).join("")}</ul></div>
+    <button class="btn" id="gnQuiz">Practice: Multiple choice ›</button>`);
+  $("#gnQuiz").onclick=genQuiz;
+}
+function genQuiz(){
+  const items=shuffle(genItems()); if(!items.length){ toast("No nouns yet"); return; }
+  game={kind:"genquiz",queue:items.slice(0,20),total:Math.min(20,items.length),firstTry:0,seen:new Set(),back:genBack};
+  gameShell("🔤 "+GEN.title,""); renderGenQuiz();
+}
+function renderGenQuiz(){
+  const g=game; $("#gameSub").textContent=`${g.total-g.queue.length}/${g.total} · ${g.firstTry} right first try`;
+  if(!g.queue.length){
+    const pct=Math.round(100*g.firstTry/g.total), b=V.best[GEN_KEY]=V.best[GEN_KEY]||{}; const rec=b.quiz==null||pct>b.quiz; if(rec){ b.quiz=pct; saveV(); }
+    gbody(`<div class="vdone"><div style="font-size:60px">${pct>=90?"🏆":pct>=70?"🎉":"💪"}</div><h2>${pct}% first try</h2><p class="note">${rec?"New best!":`Best: ${b.quiz}%`}</p>
+      <button class="btn" id="gAgain">Play again</button><div style="height:10px"></div><button class="btn ghost" id="gSprint">Try the Sprint</button><div style="height:10px"></div><button class="btn ghost" id="gBack2">Back</button></div>`);
+    $("#gAgain").onclick=genQuiz; $("#gSprint").onclick=genSprint; $("#gBack2").onclick=genBack; return;
+  }
+  const it=g.queue[0], arts=Object.entries(GEN.arts);
+  gbody(`<div style="text-align:center">${vocabPic(it.c,true)}</div><div class="gq">___ ${esc(it.noun)}</div><div class="note" style="text-align:center">${esc(it.c[2])}</div>
+    <div class="opts" style="grid-template-columns:repeat(${arts.length},1fr);margin-top:14px">${arts.map(([k,a])=>`<button class="opt" data-g="${k}">${a}</button>`).join("")}</div><div id="gExp"></div>`);
+  $("#gameBody").querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
+    if(g.lock) return; g.lock=true;
+    const right=b.dataset.g===it.g; b.classList.add(right?"right":"wrong");
+    if(!right) $("#gameBody").querySelector(`.opt[data-g="${it.g}"]`).classList.add("right");
+    if(right&&!g.seen.has(it.c[1])) g.firstTry++; g.seen.add(it.c[1]);
+    $("#gExp").innerHTML=`<div class="gq" style="font-size:20px;margin-top:14px"><b class="${gcls(it.g)}">${esc(genFull(it))}</b></div><div class="note" style="text-align:center">${GEN.names[it.g]}</div>${genHint(it)}<button class="btn" id="gNext" style="margin-top:12px">Next ›</button>`;
+    right?chime(true):chime(false); say(it.c[1],"-10%");
+    $("#gNext").onclick=()=>{ g.lock=false; g.queue.shift(); if(!right) g.queue.splice(Math.min(g.queue.length,4),0,it); renderGenQuiz(); };
+  });
+}
+function genSprint(){
+  const items=genItems(); if(!items.length){ toast("No nouns yet"); return; }
+  game={kind:"gensprint",score:0,streak:0,best:0,right:0,wrong:0,end:Date.now()+60000,queue:shuffle(items.slice()),all:items,back:genBack};
+  gameShell("⚡ Gender sprint","");
+  game.timer=setInterval(()=>{ const g=game; if(!g||g.kind!=="gensprint") return; const left=Math.max(0,Math.ceil((g.end-Date.now())/1000));
+    $("#gameSub").textContent=`⏱ ${left}s · ${g.score} pts · streak ${g.streak}`; if(left<=0){ clearInterval(g.timer); endGenSprint(); } },200);
+  renderGenSprint();
+}
+function renderGenSprint(){
+  const g=game; if(!g.queue.length) g.queue=shuffle(g.all.slice());
+  const it=g.queue[0], arts=Object.entries(GEN.arts), clsOf={m:"ser",f:"estar",n:"neu"};
+  gbody(`<div style="text-align:center">${vocabPic(it.c,false)}</div><div class="gq" style="min-height:44px">___ ${esc(it.noun)}</div>
+    <div class="sprint${arts.length>2?" three":""}">${arts.map(([k,a])=>`<button class="sbtn ${clsOf[k]}" data-g="${k}">${a}<br><span>${GEN.names[k]}</span></button>`).join("")}</div><div id="sMsg" style="min-height:60px"></div>`);
+  $("#gameBody").querySelectorAll(".sbtn").forEach(b=>b.onclick=()=>{
+    if(g.lock||Date.now()>g.end) return; g.lock=true; g.queue.shift();
+    const right=b.dataset.g===it.g;
+    $("#gameBody").querySelector(".gq").innerHTML=`<b class="${gcls(it.g)}">${esc(genFull(it))}</b>`;
+    if(right){ g.streak++; g.best=Math.max(g.best,g.streak); g.right++; const mult=1+Math.floor(g.streak/5); g.score+=10*mult; chime(true);
+      $("#sMsg").innerHTML=`<div class="ok" style="text-align:center">+${10*mult}${mult>1?` (x${mult} streak!)`:""}</div>`;
+      setTimeout(()=>{ g.lock=false; if(game===g&&Date.now()<g.end) renderGenSprint(); },650); }
+    else { g.streak=0; g.wrong++; chime(false); $("#sMsg").innerHTML=genHint(it)||`<div class="note" style="text-align:center">${GEN.names[it.g]}</div>`;
+      setTimeout(()=>{ g.lock=false; if(game===g&&Date.now()<g.end) renderGenSprint(); },1700); }
+  });
+}
+function endGenSprint(){
+  const g=game, b=V.best[GEN_KEY]=V.best[GEN_KEY]||{}; const rec=b.sprint==null||g.score>b.sprint; if(rec){ b.sprint=g.score; saveV(); }
+  $("#gameSub").textContent="";
+  gbody(`<div class="vdone"><div style="font-size:60px">${rec?"🏆":"⚡"}</div><h2>${g.score} pts</h2>
+    <p class="note">${g.right} right · ${g.wrong} wrong · longest streak ${g.best}. ${rec?"New best!":`Best: ${b.sprint}`}</p>
+    <button class="btn" id="spAgain">Play again</button><div style="height:10px"></div><button class="btn ghost" id="spBack">Back</button></div>`);
+  $("#spAgain").onclick=genSprint; $("#spBack").onclick=genBack;
+}
 function openGrammar(){
   const b=V.best[GKEY]||{};
   $("#gramBody").innerHTML=`<p class="note" style="margin-top:0">Grammar topics with a lesson, games and speaking practice.</p>
-    <button class="mode" data-topic="serestar"><span class="mi">⚖️</span><span><b>Ser vs Estar</b><br><span class="note" style="margin:0">Both mean "to be." Learn when to use which.${b.quiz!=null?` Best quiz ${b.quiz}%.`:""}</span></span></button>
-    <button class="mode" data-topic="prog"><span class="mi">🏃</span><span><b>"I am ___ing": -ando / -iendo</b><br><span class="note" style="margin:0">Estoy manejando, estamos comiendo. Lesson, Form it, Say it, action-word scenes.${(V.best.gram_prog||{}).form!=null?` Best Form it ${V.best.gram_prog.form}%.`:""}</span></span></button>
-    <button class="mode" data-topic="loc"><span class="mi">📍</span><span><b>Where is it? Location words</b><br><span class="note" style="margin:0">encima de, debajo de, al lado de, detrás de, cerca / lejos, aquí / ahí / allá…${(V.best.gram_loc||{}).quiz!=null?` Best quiz ${V.best.gram_loc.quiz}%.`:""}</span></span></button>
-    <p class="note" style="text-align:center">More topics coming (por vs para, past tenses, gustar…). Tell Claude which you want next.</p>`;
+    <button class="mode" data-topic="serestar"><span class="mi">${TV.ic}</span><span><b>${esc(TV.title)}</b><br><span class="note" style="margin:0">${esc(TV.sub)}${b.quiz!=null?` Best quiz ${b.quiz}%.`:""}</span></span></button>
+    ${LANG!=="es"?genMenuBtn():""}
+    ${LANG==="es"?`<button class="mode" data-topic="prog"><span class="mi">🏃</span><span><b>"I am ___ing": -ando / -iendo</b><br><span class="note" style="margin:0">Estoy manejando, estamos comiendo. Lesson, Form it, Say it, action-word scenes.${(V.best.gram_prog||{}).form!=null?` Best Form it ${V.best.gram_prog.form}%.`:""}</span></span></button>`:""}
+    <button class="mode" data-topic="loc"><span class="mi">📍</span><span><b>Where is it? Location words</b><br><span class="note" style="margin:0">${esc(LOC.filter(l=>l.g!=="deictic").slice(0,5).map(l=>l.es).join(", "))}, ${esc(LOC.filter(l=>l.g==="deictic").map(l=>l.es).join(" / "))}…${(V.best.gram_loc||{}).quiz!=null?` Best quiz ${V.best.gram_loc.quiz}%.`:""}</span></span></button>
+    <p class="note" style="text-align:center">More topics coming${LANG==="es"?" (por vs para, past tenses, gustar…)":""}. Tell Claude which you want next.</p>`;
   show("s-gram");
 }
 function openSerEstar(){
   game=null; const b=V.best[GKEY]||{};
-  $("#setTitle").textContent="⚖️ Ser vs Estar";
+  $("#setTitle").textContent=TV.ic+" "+TV.title;
   $("#setBody").innerHTML=`
     <div class="tiles">
       <div class="tile"><div class="v">${b.quiz!=null?b.quiz+"%":"–"}</div><div class="k">best multiple choice</div></div>
       <div class="tile"><div class="v">${b.sprint??"–"}</div><div class="k">best sprint score</div></div>
       <div class="tile"><div class="v">${b.say!=null?b.say+"%":"–"}</div><div class="k">best Say it</div></div>
-      <div class="tile"><div class="v">${SE_ITEMS.length}</div><div class="k">practice sentences</div></div>
+      <div class="tile"><div class="v">${TV.items.length}</div><div class="k">practice sentences</div></div>
     </div>
-    <button class="mode" data-gmode="lesson"><span class="mi">📘</span><span><b>Lesson</b><br><span class="note" style="margin:0">The rules (DOCTOR vs PLACE), conjugations and tricky words</span></span></button>
+    <button class="mode" data-gmode="lesson"><span class="mi">📘</span><span><b>Lesson</b><br><span class="note" style="margin:0">${esc(TV.lessonSub)}</span></span></button>
     <button class="mode" data-gmode="quiz"><span class="mi">🔤</span><span><b>Multiple choice</b><br><span class="note" style="margin:0">Fill the blank with the right form. Every answer explains the rule.</span></span></button>
-    <button class="mode" data-gmode="sprint"><span class="mi">⚡</span><span><b>Ser or Estar sprint</b> · 60s<br><span class="note" style="margin:0">Tap the right form (es / está, soy / estoy…) as fast as you can. Streaks multiply your points.</span></span></button>
-    <button class="mode" data-gmode="say"><span class="mi">🎤</span><span><b>Say it</b><br><span class="note" style="margin:0">See the English, say the whole sentence in Spanish with the right verb</span></span></button>`;
+    <button class="mode" data-gmode="sprint"><span class="mi">⚡</span><span><b>${cap(TV.A)} or ${cap(TV.B)} sprint</b> · 60s<br><span class="note" style="margin:0">${esc(TV.sprintSub)}</span></span></button>
+    <button class="mode" data-gmode="say"><span class="mi">🎤</span><span><b>Say it</b><br><span class="note" style="margin:0">See the English, say the whole sentence in ${LG.name} with the right verb</span></span></button>`;
   curSetId=null; $("#setBack").onclick=openGrammar; show("s-set");
 }
 $("#setBody").addEventListener("click",e=>{
   const m=e.target.closest("[data-gmode]"); if(!m) return; e.stopPropagation(); unlockAudio();
   ({lesson:seLesson,quiz:seQuiz,sprint:seSprint,say:seSay})[m.dataset.gmode]();
 },true);
-$("#gramBody").addEventListener("click",e=>{ const t=e.target.closest("[data-topic]"); if(!t) return; ({prog:openProgTopic,loc:openLocTopic,serestar:openSerEstar})[t.dataset.topic](); });
+$("#gramBody").addEventListener("click",e=>{ const t=e.target.closest("[data-topic]"); if(!t) return; ({prog:openProgTopic,loc:openLocTopic,serestar:openSerEstar,gender:openGenTopic})[t.dataset.topic](); });
 $("#gramBack").onclick=goHome;
 $("#openGram").onclick=openGrammar;
 const fillBlank=(s,f,cls="")=>esc(s).replace("___",`<b class="${cls}">${esc(f)}</b>`);
 const seBack=()=>openSerEstar();
-function ruleBox(key){ const r=SE_RULES[key]; return `<div class="rule ${r[0]==="SER"?"ser":r[0]==="ESTAR"?"estar":"both"}"><b>${r[0]} · ${esc(r[1])}</b><div>${esc(r[2])}</div></div>`; }
+function ruleBox(key){ const r=TV.rules[key]; return `<div class="rule ${r[0]===TV.A.toUpperCase()?"ser":r[0]===TV.B.toUpperCase()?"estar":"both"}"><b>${r[0]} · ${esc(r[1])}</b><div>${esc(r[2])}</div></div>`; }
 
+function tvLesson(){
+  game={kind:"lesson", back:seBack}; const X=TV.lesson;
+  gameShell("📘 "+TV.title,"");
+  const row=ex=>`<div class="line" style="display:flex;gap:8px;align-items:center;margin-top:6px"><div class="tx" style="flex:1">${tapWords(ex)}</div><button class="play" data-say="${esc(ex)}">▶︎</button></div>`;
+  gbody(`<div class="sec"><h3>${esc(cap(TV.A))} or ${esc(TV.B)}?</h3><p style="margin:0">${X.intro}</p><p class="note">${X.trick}</p></div>
+    <div class="sec"><h3>Conjugations (present)</h3><table class="conj"><tr><th></th><th class="ser-t">${TV.A}</th><th class="estar-t">${TV.B}</th></tr>
+      ${X.conj.map(r=>`<tr><td>${r[0]}</td><td class="tw" data-w="${r[1]}">${r[1]}</td><td class="tw" data-w="${r[2]}">${r[2]}</td></tr>`).join("")}</table>
+      <p class="note">Tap any form to hear it.</p></div>
+    ${[["A","ser-t"],["B","estar-t"]].map(([k,c])=>`<div class="sec"><h3><span class="${c}">${esc(X[k].title)}</span></h3>${X[k].rows.map(([t,ex])=>`<div style="margin-top:10px"><b class="${c}">${esc(t)}</b>${row(ex)}</div>`).join("")}</div>`).join("")}
+    <div class="sec"><h3>${esc(X.past.title)}</h3><p style="margin:0">${X.past.text}</p>${X.past.rows.map(([v,ex])=>`<div style="margin-top:10px"><b class="${v===TV.A?"ser-t":"estar-t"}">${esc(v)}</b>${row(ex)}</div>`).join("")}</div>
+    <div class="sec"><h3>Watch out</h3>
+      ${X.pairs.map(([a,ae,b,be])=>`<div class="pair"><div>${tapWords(a)}<div class="note" style="margin:0">${esc(ae)}</div></div><div>${tapWords(b)}<div class="note" style="margin:0">${esc(be)}</div></div></div>`).join("")}</div>
+    <button class="btn" id="lgQuiz">Practice: Multiple choice ›</button>`);
+  $("#lgQuiz").onclick=seQuiz;
+}
 function seLesson(){
+  if(LANG!=="es") return tvLesson();
   game={kind:"lesson", back:seBack};
   gameShell("📘 Ser vs Estar","");
   const row=(f,ex)=>`<div class="line" style="display:flex;gap:8px;align-items:center;margin-top:6px"><div class="tx" style="flex:1">${tapWords(ex)}</div><button class="play" data-say="${esc(ex)}">▶︎</button></div>`;
@@ -2579,8 +2980,8 @@ function seLesson(){
 }
 
 function seQuiz(){
-  game={kind:"sequiz", queue:shuffle(SE_ITEMS.slice()).slice(0,20), total:20, firstTry:0, seen:new Set(), back:seBack};
-  gameShell("🔤 Ser vs Estar","");
+  game={kind:"sequiz", queue:shuffle(TV.items.slice()).slice(0,20), total:Math.min(20,TV.items.length), firstTry:0, seen:new Set(), back:seBack};
+  gameShell("🔤 "+TV.title,"");
   renderSeQuiz();
 }
 function renderSeQuiz(){
@@ -2610,17 +3011,17 @@ function renderSeQuiz(){
 }
 
 function seSprint(){
-  game={kind:"sprint", score:0, streak:0, best:0, right:0, wrong:0, end:Date.now()+60000, queue:shuffle(SE_ITEMS.slice()), back:seBack};
-  gameShell("⚡ Ser or Estar sprint","");
+  game={kind:"sprint", score:0, streak:0, best:0, right:0, wrong:0, end:Date.now()+60000, queue:shuffle(TV.items.slice()), back:seBack};
+  gameShell(`⚡ ${cap(TV.A)} or ${cap(TV.B)} sprint`,"");
   game.timer=setInterval(()=>{ const g=game; if(!g||g.kind!=="sprint") return; const left=Math.max(0,Math.ceil((g.end-Date.now())/1000));
     $("#gameSub").textContent=`⏱ ${left}s · ${g.score} pts · streak ${g.streak}`; if(left<=0){ clearInterval(g.timer); endSprint(); } },200);
   renderSprint();
 }
 function renderSprint(){
-  const g=game; if(!g.queue.length) g.queue=shuffle(SE_ITEMS.slice());
+  const g=game; if(!g.queue.length) g.queue=shuffle(TV.items.slice());
   const it=g.queue[0];
   gbody(`<div class="gq" style="min-height:70px">${fillBlank(it[0],"____")}</div><div class="note" style="text-align:center">${esc(it[4])}</div>
-    <div class="sprint"><button class="sbtn ser" data-v="SER">${esc((isSer(it[1])?it[1]:it[2]).toLowerCase())}<br><span>ser</span></button><button class="sbtn estar" data-v="ESTAR">${esc((isSer(it[1])?it[2]:it[1]).toLowerCase())}<br><span>estar</span></button></div>
+    <div class="sprint"><button class="sbtn ser" data-v="SER">${esc((isSer(it[1])?it[1]:it[2]).toLowerCase())}<br><span>${TV.A}</span></button><button class="sbtn estar" data-v="ESTAR">${esc((isSer(it[1])?it[2]:it[1]).toLowerCase())}<br><span>${TV.B}</span></button></div>
     <div id="sMsg" style="min-height:70px"></div>`);
   $("#gameBody").querySelectorAll(".sbtn").forEach(b=>b.onclick=()=>{
     if(g.lock||Date.now()>g.end) return;
@@ -2647,8 +3048,8 @@ function endSprint(){
 }
 
 function seSay(){
-  game={kind:"sesay", queue:shuffle(SE_ITEMS.slice()).slice(0,12), total:12, good:0, back:seBack};
-  gameShell("🎤 Say it · Ser vs Estar","");
+  game={kind:"sesay", queue:shuffle(TV.items.slice()).slice(0,12), total:12, good:0, back:seBack};
+  gameShell("🎤 Say it · "+TV.title,"");
   renderSeSay();
 }
 function seCheck(it, heard){
@@ -2667,7 +3068,7 @@ function renderSeSay(){
     $("#ssAgain").onclick=seSay; $("#ssBack").onclick=seBack; return;
   }
   const it=g.queue[0], full=it[0].replace("___",it[1]); g.tries=g.tries||0;
-  gbody(`<div class="note" style="text-align:center;margin:0">Say this in Spanish:</div><div class="gq" style="margin-top:6px">${esc(it[4])}</div>
+  gbody(`<div class="note" style="text-align:center;margin:0">Say this in ${LG.name}:</div><div class="gq" style="margin-top:6px">${esc(it[4])}</div>
     <div id="ssHint" class="gq" style="font-size:17px;display:none">${tapWords(full)}</div>
     <div style="text-align:center;margin-top:16px"><button id="ssMic" class="bigmic"><svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V22h2v-3.08A7 7 0 0 0 19 12h-2z"/></svg></button><div class="note" id="ssLbl" style="margin-top:6px">Tap and say the sentence</div></div>
     <div id="ssRes" class="vres" style="text-align:center"></div>
@@ -2744,6 +3145,23 @@ const progPhrase=v=>v.ger+(v.x?" "+v.x:"");
 VOCAB.push({id:"actions",ic:"🏃",t:"Actions (-ando / -iendo)",w:PROG.map(v=>[v.e,progPhrase(v),v.en,v.alts||"",`${v.inf} → ${v.ger}${v.irr?" · irregular: "+v.irr:""}. Estoy ${progPhrase(v)} = I'm ${v.en}.`,"action"])});
 SCENES.push({id:"plaza",t:"Busy plaza",ic:"🏙️",helper:"🧑‍🦱",name:"Mateo",bg:"park",sets:["actions"]});
 SET_SCENE.actions="plaza";
+// French / German: swap in the translated words (same pictures and English, aligned by index).
+// Card: [picture, word, English, alts, note, kind, 3rd-person form (actions), gender m/f/n/pl]
+const VOCAB_L10N={"fr":{"sets":{"basics":[["la maison","","","lah meh-ZOH(n)","f"],["l'eau","","Feminine: l'eau = la + eau.","LOH","f"],["le soleil","","","luh so-LAY","m"],["la lune","","","lah LEWN","f"],["l'étoile","","Feminine: une étoile.","lay-TWAHL","f"],["l'arbre","","Masculine: un arbre.","LAHR-bruh","m"],["la fleur","","","lah FLUR","f"],["la pluie","","","lah PLWEE","f"],["le feu","","","luh FUH","m"],["le livre","","","luh LEE-vruh","m"],["l'argent","","Masculine. The same word means silver.","lar-ZHAH(n)","m"],["la clé","clef","Also spelled la clef (same sound).","lah KLAY","f"],["la montre","horloge|pendule|réveil","la montre = wristwatch; l'horloge (f.) = wall clock.","lah MOH(n)-truh","f"],["la porte","","","lah PORT","f"],["la fenêtre","","","lah fuh-NEH-truh","f"],["l'homme","","The h is silent.","LOM","m"],["la femme","","Spelled femme, said 'fam'. Also means wife.","lah FAM","f"],["le bébé","","Always masculine, even for a baby girl.","luh bay-BAY","m"],["le garçon","petit garçon|enfant","","luh gar-SOH(n)","m"],["la fille","petite fille|fillette","la fille = girl and daughter.","lah FEE-yuh","f"]],"fruits":[["la pomme","","la pomme de terre ('earth apple') = potato.","lah POM","f"],["la banane","","","lah ba-NAN","f"],["l'orange","","Feminine: une orange.","lo-RAH(n)ZH","f"],["le citron","citron vert|lime","le citron vert = lime.","luh see-TROH(n)","m"],["les raisins","raisin","False friend: le raisin = grape; a raisin is un raisin sec.","lay reh-ZA(n)","pl"],["la fraise","","","lah FREHZ","f"],["la pastèque","melon d'eau","In Quebec: le melon d'eau.","lah pas-TEK","f"],["l'ananas","","Masculine; the final s is usually pronounced.","la-na-NAS","m"],["la mangue","","Feminine in French.","lah MAH(n)G","f"],["la pêche","","Also means fishing.","lah PESH","f"],["la poire","","","lah PWAHR","f"],["les cerises","cerise","","lay suh-REEZ","pl"],["la noix de coco","coco","Literally 'coco nut'.","lah nwah duh ko-KOH","f"],["le kiwi","","","luh kee-WEE","m"],["les myrtilles","myrtille|bleuets|bleuet","In Quebec: les bleuets.","lay meer-TEE-yuh","pl"],["le melon","","","luh muh-LOH(n)","m"],["l'avocat","","Masculine. Also means lawyer.","la-vo-KAH","m"]],"veg":[["la carotte","","","lah ka-ROT","f"],["la pomme de terre","patate|patates|pommes de terre","Literally 'earth apple'. Casual and in Quebec: la patate.","lah pom duh TEHR","f"],["la tomate","","","lah to-MAT","f"],["l'oignon","oignons","Masculine. Spelled oi but said 'o'.","lo-NYOH(n)","m"],["l'ail","","Masculine. Rhymes with 'eye'.","LYE","m"],["le brocoli","brocolis","","luh bro-ko-LEE","m"],["le maïs","","The ï means you say both vowels: ma-ees.","luh ma-EES","m"],["le concombre","","","luh koh(n)-KOH(n)-bruh","m"],["la laitue","salade","People often just say la salade for the lettuce itself.","lah leh-TEW","f"],["le piment","piment rouge|piment fort","le piment = hot pepper; le poivron = bell pepper.","luh pee-MAH(n)","m"],["le poivron","","Not le poivre, which is black pepper.","luh pwah-VROH(n)","m"],["l'aubergine","","Feminine; the British word comes from French.","lo-bair-ZHEEN","f"],["le champignon","champignons","","luh shah(n)-pee-NYOH(n)","m"],["les haricots","haricot|fèves","No liaison: lay a-ree-KOH, never lay-za-ree-KOH.","lay a-ree-KOH","pl"],["la citrouille","courge|potiron","la courge = squash in general.","lah see-TROO-yuh","f"],["les petits pois","petit pois|pois","","lay puh-tee PWAH","pl"]],"colors":[["rouge","","Same in masculine and feminine.","ROOZH",""],["bleu","bleue","","BLUH",""],["vert","verte","The t is silent; feminine verte sounds it.","VEHR",""],["jaune","","","ZHOHN",""],["orange","","Invariable: des chaussures orange.","o-RAH(n)ZH",""],["violet","violette|mauve","Feminine: violette.","vyo-LEH",""],["rose","","","ROHZ",""],["noir","noire","","NWAHR",""],["blanc","blanche","Irregular feminine: blanche.","BLAH(n)",""],["gris","grise","","GREE",""],["marron","brun|brune","Marron never changes; brun is used for hair. In Quebec: brun.","ma-ROH(n)",""],["doré","dorée|or","","do-RAY",""],["argenté","argentée|argent","","ar-zhah(n)-TAY",""],["turquoise","","","tewr-KWAHZ",""]],"food":[["le pain","","","luh PA(n)","m"],["le fromage","","","luh fro-MAHZH","m"],["l'œuf","œufs","Masculine. The f is said in l'œuf but silent in les œufs (lay ZUH).","LUHF","m"],["le poulet","","","luh poo-LEH","m"],["la viande","steak|bifteck","le steak / le bifteck = steak.","lah VYAH(n)D","f"],["le poisson","","Careful: poison (one s, a z sound) = poison.","luh pwah-SOH(n)","m"],["le riz","","","luh REE","m"],["les pâtes","pâte","Plural in French; la pâte = dough.","lay PAHT","pl"],["la salade","","","lah sa-LAD","f"],["la soupe","potage","","lah SOOP","f"],["le taco","tacos","","luh ta-KOH","m"],["le burrito","burritos","","luh boo-ree-TOH","m"],["la pizza","","","lah peed-ZAH","f"],["le hamburger","burger","No elision: le hamburger, not l'hamburger.","luh ah(n)-bur-GUR","m"],["les frites","frite|patates frites","In Quebec: les patates frites.","lay FREET","pl"],["le bacon","lardons","","luh bay-KON","m"],["le beurre","","","luh BUR","m"],["le gâteau","gâteaux","Plural adds x: les gâteaux.","luh gah-TOH","m"],["la glace","crème glacée","In Quebec: la crème glacée. La glace also means ice.","lah GLAS","f"],["le biscuit","biscuits|cookie|cookies","A big American-style one is often un cookie.","luh bees-KWEE","m"],["le chocolat","","","luh sho-ko-LAH","m"]],"drinks":[["le café","","Also means a café.","luh ka-FAY","m"],["le thé","","","luh TAY","m"],["le lait","","","luh LEH","m"],["le jus","jus de fruits","","luh ZHEW","m"],["la bière","","","lah BYEHR","f"],["le vin","","","luh VA(n)","m"],["le soda","boisson gazeuse|liqueur|boisson","In Quebec, une liqueur can mean a soft drink.","luh so-DAH","m"],["le glaçon","glaçons|glace","le glaçon = ice cube; la glace = ice in general.","luh glah-SOH(n)","m"],["le cocktail","","","luh kok-TEL","m"],["l'alcool","alcool fort|spiritueux","Masculine. Une liqueur is a sweet liqueur, not liquor.","lal-KOL","m"],["le maté","mate","","luh ma-TAY","m"],["le champagne","","Masculine for the drink; la Champagne is the region.","luh shah(n)-PAN-yuh","m"]],"clothes":[["le t-shirt","tee-shirt|tshirt|gaminet","In Quebec also: le gaminet.","luh tee-SHURT","m"],["la chemise","","","lah shuh-MEEZ","f"],["le pantalon","pantalons|jean","Singular in French: un pantalon = a pair of pants.","luh pah(n)-ta-LOH(n)","m"],["la robe","","","lah ROB","f"],["la veste","manteau|blouson|veston","le manteau = heavy coat; la veste = jacket.","lah VEST","f"],["les chaussettes","chaussette|bas","In Quebec: les bas.","lay shoh-SET","pl"],["les baskets","basket|tennis|espadrilles|sneakers","In Quebec: les espadrilles.","lay bas-KET","pl"],["les chaussures","chaussure|souliers|soulier","In Quebec: les souliers.","lay shoh-SEWR","pl"],["les bottes","botte","","lay BOT","pl"],["la casquette","","","lah kas-KET","f"],["le chapeau","chapeaux","Plural: les chapeaux.","luh sha-POH","m"],["l'écharpe","foulard","Feminine. In Quebec: le foulard.","lay-SHARP","f"],["les gants","gant|mitaines","","lay GAH(n)","pl"],["le short","shorts|bermuda","Singular in French: un short = a pair of shorts.","luh SHORT","m"],["le sac","sac à main|sacoche","le sac à main = purse. In Quebec: la sacoche.","luh SAK","m"],["les lunettes de soleil","lunettes","Always plural.","lay lew-net duh so-LAY","pl"],["les lunettes","lunette","Always plural: des lunettes.","lay lew-NET","pl"],["le sac à dos","sac-à-dos","","luh sak a DOH","m"],["les sous-vêtements","sous-vêtement|culotte|caleçon|slip","Literally 'under-clothes'.","lay soo-vet-MAH(n)","pl"],["les chaussures de randonnée","chaussures de marche|bottes de randonnée|bottes de marche","","lay shoh-sewr duh rah(n)-do-NAY","pl"]],"office":[["le stylo","stylo à bille|bic|crayon|plume","In Quebec: un crayon or une plume can mean a pen.","luh stee-LOH","m"],["le crayon","crayon à papier|crayon de bois|crayon à mine","False friend: le crayon = pencil.","luh kray-OH(n)","m"],["le trombone","","Also the musical instrument.","luh troh(n)-BON","m"],["les ciseaux","ciseau","Plural, like 'scissors'.","lay see-ZOH","pl"],["la règle","","Also means rule.","lah REH-gluh","f"],["le dossier","chemise|chemise cartonnée","A cardboard folder is also une chemise (same word as shirt).","luh doh-SYAY","m"],["le cahier","","","luh ka-YAY","m"],["le porte-bloc","porte-blocs|planchette|planchette à pince","In Quebec: la planchette à pince.","luh port-BLOK","m"],["la punaise","","Also means bedbug!","lah pew-NEZ","f"],["la poubelle","corbeille|corbeille à papier","Named after Eugène Poubelle, the Paris official who required trash bins.","lah poo-BEL","f"],["le calendrier","","","luh ka-lah(n)-dree-YAY","m"],["l'imprimante","","Feminine.","la(n)-pree-MAH(n)T","f"],["la mallette","porte-documents|attaché-case|serviette","","lah ma-LET","f"],["le classeur","meuble de classement|classeur à tiroirs|armoire de classement","le classeur also means a ring binder.","luh klah-SUR","m"],["la feuille","feuille de papier|papier","Also means leaf.","lah FUH-yuh","f"],["l'enveloppe","","Feminine.","lah(n)-VLOP","f"],["la boîte","carton","un carton = cardboard box.","lah BWAHT","f"],["la chaise","","","lah SHEZ","f"],["le bureau","","le bureau = office and desk.","luh bew-ROH","m"],["le crayon de cire","crayon gras|crayon de couleur|crayons de cire|craie de cire","False friend: un crayon is a pencil; a wax crayon is un crayon de cire.","luh kray-oh(n) duh SEER","m"]],"electronics":[["le portable","téléphone|téléphone portable|smartphone|mobile|cellulaire|cell","In Quebec: le cellulaire (le cell).","luh por-TAH-bluh","m"],["l'ordinateur portable","portable|ordi portable|laptop","Masculine. Le portable can mean the phone or the laptop.","lor-dee-na-tur por-TAH-bluh","m"],["l'ordinateur","ordi|PC","Masculine. Casual: l'ordi.","lor-dee-na-TUR","m"],["le clavier","","","luh kla-VYAY","m"],["la souris","","Same word as the animal.","lah soo-REE","f"],["le casque","écouteurs|casque audio","le casque = headphones (also helmet); les écouteurs = earbuds.","luh KASK","m"],["la télévision","télé|téléviseur|tv","Usually shortened to la télé.","lah tay-lay-vee-ZYOH(n)","f"],["l'appareil photo","appareil-photo|caméra","Masculine. Une caméra is a video camera.","la-pa-ray fo-TOH","m"],["la pile","batterie","la pile = AA-type battery; la batterie = car or phone battery.","lah PEEL","f"],["la prise","fiche|prise électrique","la prise = outlet; la fiche = the plug on the cord.","lah PREEZ","f"],["la manette","manette de jeu|manette de jeux","","lah ma-NET","f"],["la radio","","Feminine despite ending in -o.","lah ra-DYOH","f"],["le micro","microphone","","luh mee-KROH","m"],["la lampe de poche","lampe torche|torche","In France also: une lampe torche.","lah lah(n)p duh POSH","f"],["le réveil","réveille-matin|cadran","In Quebec: le cadran.","luh ray-VAY","m"],["l'imprimante","","Feminine.","la(n)-pree-MAH(n)T","f"]],"house":[["le lit","","The t is silent.","luh LEE","m"],["le canapé","sofa|divan","In Quebec: le divan or le sofa.","luh ka-na-PAY","m"],["la douche","","","lah DOOSH","f"],["la baignoire","bain","In Quebec: le bain.","lah beh-NYWAHR","f"],["les toilettes","toilette|WC|cuvette","Plural in France; Quebec says la toilette.","lay twah-LET","pl"],["le miroir","glace","","luh mee-RWAHR","m"],["le balai","","","luh ba-LEH","m"],["le panier","","","luh pa-NYAY","m"],["le papier toilette","papier hygiénique|papier de toilette","","luh pa-pyay twah-LET","m"],["le savon","","","luh sa-VOH(n)","m"],["la brosse à dents","brosse à dent","","lah bros a DAH(n)","f"],["la bougie","chandelle","In Quebec: la chandelle.","lah boo-ZHEE","f"],["l'ampoule","","Feminine. Also means a blister.","lah(n)-POOL","f"],["le tableau","cadre|peinture|toile","le cadre = the frame.","luh ta-BLOH","m"],["la plante","","","lah PLAH(n)T","f"],["la peluche","toutou|doudou","Feminine. In Quebec: un toutou.","lah puh-LEWSH","f"],["le marteau","","","luh mar-TOH","m"],["l'échelle","escalier|escabeau","l'échelle (f.) = ladder; l'escalier (m.) = stairs.","lay-SHEL","f"],["l'éponge","","Feminine.","lay-POH(n)ZH","f"],["le seau","chaudière","In Quebec: la chaudière.","luh SOH","m"]],"kitchen":[["la poêle","poêle à frire","Feminine and said 'pwahl'; le poêle (masc.) is a stove.","lah PWAHL","f"],["la cuillère","cuiller|cuillère à soupe","","lah kwee-YEHR","f"],["le couteau","","Plural: les couteaux.","luh koo-TOH","m"],["la fourchette","","","lah foor-SHET","f"],["l'assiette","","Feminine.","la-SYET","f"],["le bol","","","luh BOL","m"],["la tasse","mug","","lah TAS","f"],["le verre","","Sounds like vert (green) and vers (toward).","luh VEHR","m"],["la théière","bouilloire","la bouilloire = kettle.","lah tay-YEHR","f"],["la casserole","marmite|chaudron","False friend: une casserole is a saucepan.","lah kas-ROL","f"],["le sel","","","luh SEL","m"],["le bocal","pot","Plural: les bocaux.","luh bo-KAL","m"],["les baguettes","baguette","Same word as the bread.","lay ba-GET","pl"],["le biberon","","","luh bee-BROH(n)","m"],["la paille","","Also means straw for animals.","lah PYE","f"],["le glaçon","glaçons|glace","le glaçon = ice cube; la glace = ice in general.","luh glah-SOH(n)","m"],["l'extincteur","","Masculine.","lek-sta(n)k-TUR","m"],["la cuisinière","gazinière|plaque de cuisson|poêle","In Quebec: le poêle. La cuisinière also means a (female) cook.","lah kwee-zee-NYEHR","f"]],"restaurant":[["le cuisinier","cuisinière|chef|chef cuisinier","Feminine: la cuisinière.","luh kwee-zee-NYAY","m"],["le serveur","serveuse|garçon","Feminine: la serveuse. Calling 'Garçon !' is dated.","luh sair-VUR","m"],["l'addition","facture|note","Feminine. In Quebec: la facture.","la-dee-SYOH(n)","f"],["la carte","carte bancaire|carte de crédit|carte bleue","La carte also means the menu!","lah KART","f"],["le pourboire","","Literally 'for drinking'. Service is included in France.","luh poor-BWAHR","m"],["le verre à vin","verre|verre de vin|coupe","","luh vehr a VA(n)","m"],["la bouteille","","","lah boo-TAY","f"],["la serviette","serviette de table","Also means towel.","lah sair-VYET","f"],["le dessert","","One s in le désert = desert.","luh deh-SEHR","m"],["le menu","carte","Le menu is often a fixed-price set meal; la carte is the full list.","luh muh-NEW","m"],["le pain","","","luh PA(n)","m"],["la table","","","lah TAH-bluh","f"],["l'entrée","hors-d'œuvre","Feminine. In France l'entrée is the starter, not the main course.","lah(n)-TRAY","f"],["le plat principal","plat de résistance|plat","Also: le plat de résistance.","luh plah pra(n)-see-PAL","m"],["la sauce","salsa","","lah SOHS","f"],["le poivre","","","luh PWAH-vruh","m"]],"store":[["le chariot","caddie|panier|panier d'épicerie","Often called un caddie in France; Quebec: un panier d'épicerie.","luh sha-RYOH","m"],["le sac","sac de courses|sac en plastique|sachet","","luh SAK","m"],["la carte de crédit","carte bancaire|carte bleue|carte","","lah kart duh kray-DEE","f"],["les espèces","liquide|argent liquide|argent comptant|comptant|cash","Payer en espèces / en liquide = pay cash.","lay zes-PES","pl"],["la pièce","pièce de monnaie|monnaie","La monnaie = change.","lah PYES","f"],["le reçu","ticket de caisse|ticket|facture","","luh ruh-SEW","m"],["l'étiquette","étiquette de prix|prix","Feminine. The source of 'etiquette'.","lay-tee-KET","f"],["le magasin","boutique","False friend: un magazine is a magazine.","luh ma-ga-ZA(n)","m"],["le centre commercial","galerie marchande","","luh sah(n)-truh ko-mair-SYAL","m"],["le cadeau","cadeaux","Plural: les cadeaux.","luh ka-DOH","m"],["le colis","paquet","","luh ko-LEE","m"],["la balance","","False friend: la balance = scale.","lah ba-LAH(n)S","f"],["le caissier","caissière","Feminine: la caissière.","luh keh-SYAY","m"],["l'ascenseur","","Masculine.","la-sah(n)-SUR","m"],["la sortie","","","lah sor-TEE","f"],["la réduction","remise|promotion|promo|soldes|rabais","Les soldes = the sales season. In Quebec: le rabais.","lah ray-dewk-SYOH(n)","f"]],"animals":[["le chien","","","luh SHYA(n)","m"],["le chat","","The t is silent.","luh SHAH","m"],["le cheval","","Irregular plural: les chevaux.","luh shuh-VAL","m"],["la vache","","","lah VASH","f"],["le cochon","porc","Le porc is the meat (pork).","luh ko-SHOH(n)","m"],["la poule","poulet","la poule = live hen; le poulet = chicken (bird or meat).","lah POOL","f"],["l'oiseau","","Masculine. Plural: les oiseaux.","lwah-ZOH","m"],["le poisson","","Same word for live fish and fish to eat.","luh pwah-SOH(n)","m"],["la souris","","","lah soo-REE","f"],["le lapin","","","luh la-PA(n)","m"],["l'ours","","Masculine; the s is pronounced.","LOORS","m"],["le singe","","","luh SA(n)ZH","m"],["le lion","lionne","","luh LYOH(n)","m"],["l'éléphant","","Masculine.","lay-lay-FAH(n)","m"],["le serpent","","Masculine in French.","luh sair-PAH(n)","m"],["la tortue","","","lah tor-TEW","f"],["le papillon","","","luh pa-pee-YOH(n)","m"],["l'abeille","","Feminine.","la-BAY","f"],["le canard","","","luh ka-NAR","m"],["le mouton","brebis","la brebis = ewe.","luh moo-TOH(n)","m"]],"transport":[["la voiture","auto|char|bagnole","In Quebec: le char. Casual France: la bagnole.","lah vwah-TEWR","f"],["le bus","autobus|autocar|car","The s is pronounced. In Quebec: l'autobus.","luh BEWS","m"],["le taxi","","","luh tak-SEE","m"],["l'avion","","Masculine.","la-VYOH(n)","m"],["le vélo","bicyclette|bicycle|bécane","In Quebec: le bicycle.","luh vay-LOH","m"],["la moto","","Short for la motocyclette, so feminine.","lah mo-TOH","f"],["le train","","","luh TRA(n)","m"],["le bateau","navire","Plural: les bateaux.","luh ba-TOH","m"],["le camion","","False friend: un camion is a truck, not a bus.","luh ka-MYOH(n)","m"],["l'ambulance","","Feminine.","lah(n)-bew-LAH(n)S","f"],["la voiture de police","voiture de patrouille|auto-patrouille|police","In Quebec: l'auto-patrouille.","lah vwah-tewr duh po-LEES","f"],["l'hélicoptère","","Masculine.","lay-lee-kop-TEHR","m"],["la station-service","station service|station d'essence|poste d'essence","In Quebec also: le poste d'essence.","lah stah-syoh(n) sair-VEES","f"],["le feu","feu rouge|feux|feu de circulation","Literally 'fire'; le feu rouge = red light.","luh FUH","m"],["l'autoroute","route","Feminine. La route = road.","lo-toh-ROOT","f"],["la carte","plan","le plan = city map.","lah KART","f"]],"mechanic":[["le pneu","pneus|roue","Say the p! La roue = wheel.","luh PNUH","m"],["la batterie","","A car battery is une batterie, not une pile.","lah bat-REE","f"],["la clé anglaise","clé à molette|clé|clef","","lah klay ah(n)-GLEZ","f"],["le tournevis","","Literally 'turn-screw'; the s is pronounced.","luh toorn-VEES","m"],["la vis","boulon|écrou","The s is pronounced. Le boulon = bolt.","lah VEES","f"],["l'huile","","Feminine; the h is silent.","LWEEL","f"],["l'essence","carburant|gaz","Feminine. In Quebec: le gaz.","leh-SAH(n)S","f"],["la boîte à outils","caisse à outils|coffre à outils","","lah bwaht a oo-TEE","f"],["le marteau","","","luh mar-TOH","m"],["la scie","","","lah SEE","f"],["l'engrenage","roue dentée|pignon","Masculine.","lah(n)-gruh-NAHZH","m"],["l'aimant","","Masculine.","leh-MAH(n)","m"],["la lampe de poche","lampe torche|torche","","lah lah(n)p duh POSH","f"],["les gants de travail","gants|gant","","lay gah(n) duh tra-VYE","pl"],["l'extincteur","","Masculine.","lek-sta(n)k-TUR","m"],["la clé de voiture","clé|clés|clé de la voiture|clé de char","","lah klay duh vwah-TEWR","f"],["le crochet","","","luh kro-SHEH","m"],["la corde","","","lah KORD","f"],["la voiture","auto|char|bagnole","In Quebec: le char.","lah vwah-TEWR","f"],["l'éponge","","Feminine.","lay-POH(n)ZH","f"]],"feelings":[["content","contente|heureux|heureuse","Heureux / heureuse = happy (a deeper feeling).","koh(n)-TAH(n)",""],["triste","","Same in masculine and feminine.","TREEST",""],["fâché","fâchée|en colère|énervé|énervée|furieux|furieuse","Also: en colère (doesn't change for gender).","fah-SHAY",""],["effrayé","effrayée|apeuré|apeurée|j'ai peur|peur","Most natural: j'ai peur (I'm scared).","eh-freh-YAY",""],["surpris","surprise|étonné|étonnée","Feminine surprise sounds the s (as z).","sewr-PREE",""],["fatigué","fatiguée|épuisé|épuisée|crevé|crevée|j'ai sommeil","J'ai sommeil = I'm sleepy.","fa-tee-GAY",""],["confus","confuse|perdu|perdue","Casual: je suis perdu (I'm lost / confused).","koh(n)-FEW",""],["inquiet","inquiète|soucieux|soucieuse","Irregular feminine: inquiète.","a(n)-KYEH",""],["nerveux","nerveuse|stressé|stressée|anxieux|anxieuse","-eux becomes -euse in the feminine.","nair-VUH",""],["malade","","","ma-LAD",""],["amoureux","amoureuse","Être amoureux de = to be in love with.","a-moo-RUH",""],["calme","détendu|détendue|tranquille|zen","","KALM",""],["gêné","gênée|embarrassé|embarrassée|honteux|honteuse","In Quebec, gêné also means shy.","zheh-NAY",""],["ennuyé","ennuyée|je m'ennuie|blasé|blasée","To say I'm bored, French uses je m'ennuie; ennuyé can also mean bothered.","ah(n)-nwee-YAY",""],["frustré","frustrée","","frews-TRAY",""],["enthousiaste","excité|excitée|impatient|impatiente|emballé|emballée|ravi|ravie","Careful: excité can sound sexual for adults. In Quebec: emballé.","ah(n)-too-ZYAST",""],["étourdi","étourdie|j'ai le vertige|j'ai la tête qui tourne","Also: j'ai la tête qui tourne (my head is spinning).","ay-toor-DEE",""],["j'ai faim","faim","Literally 'I have hunger'. Never je suis faim.","zhay FA(n)",""],["j'ai chaud","chaud","Literally 'I have hot'. Je suis chaud is slang for 'I'm up for it'.","zhay SHOH",""],["j'ai froid","froid","Literally 'I have cold'.","zhay FRWAH",""],["fier","fière","The r is pronounced. Feminine: fière.","FYEHR",""]],"weather":[["il fait beau","il y a du soleil|il fait soleil|ensoleillé|c'est ensoleillé","Literally 'it makes beautiful'. Quebec: il fait soleil.","eel feh BOH",""],["il pleut","pluie|il mouille","In Quebec, casual: il mouille.","eel PLUH",""],["il neige","neige","","eel NEZH",""],["c'est nuageux","le temps est nuageux|nuageux|il y a des nuages|le ciel est couvert|couvert","","seh nwah-ZHUH",""],["il y a du vent","il vente|venteux|c'est venteux|vent","","eel ya dew VAH(n)",""],["il fait chaud","chaud","Weather uses il fait; for your body, j'ai chaud.","eel feh SHOH",""],["il fait froid","froid","Weather uses il fait; for your body, j'ai froid.","eel feh FRWAH",""],["l'orage","tempête|orages","Masculine. La tempête = a big storm or windstorm.","lo-RAHZH","m"],["l'éclair","éclairs","Masculine. Also the pastry! Le tonnerre = thunder.","lay-KLEHR","m"],["l'arc-en-ciel","arc en ciel","Masculine. Plural: les arcs-en-ciel.","lar-kah(n)-SYEL","m"],["le brouillard","brume","","luh broo-YAR","m"],["l'ouragan","","Masculine.","loo-ra-GAH(n)","m"],["la tornade","","","lah tor-NAD","f"],["le parapluie","","Masculine: para + pluie (rain).","luh pa-ra-PLWEE","m"],["la température","","","lah tah(n)-pay-ra-TEWR","f"],["partiellement nuageux","nuageux|éclaircies|quelques nuages|ciel variable|partiellement ensoleillé","Forecasts also say des éclaircies (sunny spells).","par-syel-mah(n) nwah-ZHUH",""],["la glace","verglas","Le verglas = icy roads / black ice.","lah GLAS","f"],["la nuit","de nuit|nuit|le soir","La nuit can mean 'the night' or 'at night'.","lah NWEE","f"],["le lever du soleil","lever de soleil|aube|aurore","","luh luh-vay dew so-LAY","m"],["le coucher du soleil","coucher de soleil|crépuscule","","luh koo-shay dew so-LAY","m"]],"body":[["l'œil","yeux","Masculine. Irregular plural: les yeux (lay ZYUH).","LUHY","m"],["l'oreille","","Feminine.","lo-RAY","f"],["le nez","","","luh NAY","m"],["la bouche","","","lah BOOSH","f"],["la dent","dents","Feminine in French.","lah DAH(n)","f"],["la langue","","Also means language.","lah LAH(n)G","f"],["la main","mains","Feminine.","lah MA(n)","f"],["le pied","pieds","The d is silent.","luh PYAY","m"],["la jambe","jambes","","lah ZHAH(n)B","f"],["le bras","","Same form in the plural: les bras.","luh BRAH","m"],["le cerveau","","","luh sair-VOH","m"],["le cœur","","","luh KUR","m"],["les cheveux","cheveu|poils","Hair on the head is plural: les cheveux. Body hair: les poils.","lay shuh-VUH","pl"],["le doigt","doigts|pouce","The g and t are silent. Le pouce = thumb.","luh DWAH","m"],["l'os","os","Masculine. Plural les os: the s goes silent (lay ZOH).","LOS","m"],["la barbe","","","lah BARB","f"]]},"actions":[["conduire","conduit","rouler","French has no -ing form: il conduit = he drives / he's driving. Irregular: nous conduisons.","koh(n)-DWEER"],["marcher","marche","se promener|se balader","Regular -er verb. Se promener = to go for a walk.","mar-SHAY"],["faire de la randonnée","fait de la randonnée","randonner|faire une randonnée|faire de la rando","Faire is irregular: il fait, nous faisons, ils font.","fehr duh lah rah(n)-do-NAY"],["manger","mange","","Nous mangeons keeps the e so the g stays soft.","mah(n)-ZHAY"],["boire","boit","","Irregular: je bois, nous buvons, ils boivent.","BWAHR"],["courir","court","faire du jogging|faire de la course|jogger","Irregular: je cours, il court; past participle couru.","koo-REER"],["nager","nage","se baigner","Se baigner = to go for a swim.","na-ZHAY"],["dormir","dort","","Irregular: je dors, il dort, nous dormons.","dor-MEER"],["lire","lit","","Irregular: je lis, il lit; past participle lu.","LEER"],["écrire","écrit","","Irregular: nous écrivons, ils écrivent.","ay-KREER"],["cuisiner","cuisine","faire la cuisine|faire à manger|préparer à manger","Also: faire la cuisine. La cuisine = kitchen and cooking.","kwee-zee-NAY"],["faire le ménage","fait le ménage","nettoyer|ranger","Nettoyer = clean one thing; faire le ménage = do the housework.","fehr luh may-NAHZH"],["danser","danse","","Regular -er verb.","dah(n)-SAY"],["chanter","chante","","Un chanteur / une chanteuse = singer.","shah(n)-TAY"],["parler au téléphone","parle au téléphone","téléphoner|appeler|être au téléphone","Also: il est au téléphone (he's on the phone).","par-lay oh tay-lay-FON"],["travailler","travaille","bosser","Casual: bosser. The -ill- sounds like y.","tra-va-YAY"],["faire les courses","fait les courses","faire l'épicerie|faire des courses|faire les magasins|faire du shopping","In Quebec: faire l'épicerie. Faire les magasins = go clothes shopping.","fehr lay KOORS"],["jouer","joue","s'amuser","Jouer à + game (jouer au foot); jouer de + instrument.","zhoo-AY"],["regarder la télé","regarde la télé","regarder la télévision|regarder la tv|écouter la télé","In Quebec people often say écouter la télé.","ruh-gar-day lah tay-LAY"],["écouter de la musique","écoute de la musique","écouter la musique","Écouter = listen (no 'to' needed); entendre = hear.","ay-koo-tay duh lah mew-ZEEK"],["faire du vélo","fait du vélo","rouler à vélo|faire de la bicyclette|faire du bicycle","Many sports use faire du: faire du vélo, du ski, du surf.","fehr dew vay-LOH"],["grimper","grimpe","escalader|faire de l'escalade","Faire de l'escalade = rock climbing as a sport.","gra(n)-PAY"],["faire du sport","fait du sport","s'entraîner|faire de l'exercice|faire de la muscu","S'entraîner = to train; faire de la muscu = lift weights.","fehr dew SPOR"],["pêcher","pêche","aller à la pêche","Watch the accent: pêcher = to fish; pécher = to sin.","peh-SHAY"],["voyager","voyage","","Nous voyageons keeps the e. Un voyage = a trip.","vwah-ya-ZHAY"],["étudier","étudie","réviser","Réviser = to study for an exam.","ay-tew-DYAY"],["rire","rit","rigoler","Irregular: je ris, il rit. Casual: rigoler.","REER"],["pleurer","pleure","","Don't mix up il pleure (he's crying) and il pleut (it's raining).","pluh-RAY"],["penser","pense","réfléchir","Réfléchir = to think something over; penser à = to think about.","pah(n)-SAY"],["attendre","attend","patienter","False friend: attendre = to wait, not to attend. No 'for': j'attends le bus.","a-TAH(n)-druh"],["faire la lessive","fait la lessive","faire le lavage|laver le linge|laver les vêtements","In Quebec: faire le lavage.","fehr lah leh-SEEV"],["commander","commande","demander","Commander = to order (food); demander = to ask for, not 'demand'.","ko-mah(n)-DAY"],["dire","dit","","Irregular: vous dites (never disez).","DEER"],["aller","va","","Very irregular: je vais, tu vas, il va, nous allons, ils vont.","a-LAY"],["entendre","entend","écouter","Entendre = to hear; écouter = to listen. The d in il entend is silent.","ah(n)-TAH(n)-druh"],["apporter","apporte","amener|ramener","Apporter is for things; amener is for people.","a-por-TAY"],["servir","sert","verser","Irregular: je sers, il sert, nous servons. Verser = to pour.","sair-VEER"],["surfer","surfe","faire du surf","Also: faire du surf. Same verb for surfing the web.","sewr-FAY"],["skier","skie","faire du ski","Also: faire du ski. Note the spelling: il skie.","skee-AY"],["méditer","médite","faire de la méditation","Regular -er verb.","may-dee-TAY"]],"scenes":{"market":"Madame Rose","office":"Claire","techstore":"Julien","garage":"Monsieur Dédé","kitchen":"Mamie","restaurant":"Antoine","home":"Thomas","shop":"Chloé","farm":"Monsieur Bernard","street":"l'agent Martin","paint":"Berthe","park":"Léa","forecast":"Camille, la météorologue","plaza":"Hugo"}},"de":{"sets":{"basics":[["das Haus","Häuser","plural: die Häuser","dahs HOWS","n"],["das Wasser","","w is said like English v","dahs VAHS-uh","n"],["die Sonne","","feminine in German (but der Mond is masculine)","dee ZON-nuh","f"],["der Mond","","masculine in German (but die Sonne is feminine)","dair MOHNT","m"],["der Stern","Sterne","plural: die Sterne","dair SHTAIRN","m"],["der Baum","Bäume","plural: die Bäume","dair BOWM","m"],["die Blume","Blumen","plural: die Blumen","dee BLOO-muh","f"],["der Regen","","es regnet = it's raining","dair RAY-gen","m"],["das Feuer","","","dahs FOY-uh","n"],["das Buch","Bücher","plural: die Bücher","dahs BOOKH","n"],["das Geld","","","dahs GELT","n"],["der Schlüssel","","plural is the same: die Schlüssel","dair SHLEW-sel","m"],["die Uhr","Armbanduhr|Wanduhr","die Uhr covers both watch and clock","dee OOR","f"],["die Tür","Türen","plural: die Türen","dee TEWR","f"],["das Fenster","","","dahs FEN-stuh","n"],["der Mann","Männer","plural: die Männer; also means husband","dair MAHN","m"],["die Frau","Frauen","also means wife and Mrs.","dee FROW","f"],["das Baby","Babys","","dahs BAY-bee","n"],["der Junge","Bub|Knabe|Jungen","southern Germany/Austria: der Bub","dair YOONG-uh","m"],["das Mädchen","Mädel|Mädle|Mädl","neuter, like every -chen noun","dahs MEHT-hhen","n"]],"fruits":[["der Apfel","Äpfel","plural: die Äpfel","dair AHP-fel","m"],["die Banane","Bananen","","dee bah-NAH-nuh","f"],["die Orange","Apfelsine|Orangen","northern Germany also says die Apfelsine","dee oh-RAHN-zhuh","f"],["die Zitrone","Limette|Limone|Zitronen","lime = die Limette","dee tsee-TROH-nuh","f"],["die Trauben","Traube|Weintrauben|Weintraube","singular: die Traube","dee TROW-ben","pl"],["die Erdbeere","Erdbeeren","literally 'earth berry'","dee AIRT-bay-ruh","f"],["die Wassermelone","Wassermelonen","","dee VAHS-uh-meh-loh-nuh","f"],["die Ananas","","plural is the same: die Ananas","dee AH-nah-nahs","f"],["die Mango","Mangos","","dee MAHN-goh","f"],["der Pfirsich","Pfirsiche","say both letters of pf","dair PFEER-zihh","m"],["die Birne","Birnen","also means light bulb","dee BEER-nuh","f"],["die Kirschen","Kirsche","singular: die Kirsche","dee KEER-shen","pl"],["die Kokosnuss","Kokosnüsse|Kokos","","dee KOH-kos-noos","f"],["die Kiwi","Kiwis","","dee KEE-vee","f"],["die Heidelbeeren","Heidelbeere|Blaubeeren|Blaubeere","also called Blaubeeren","dee HEYE-del-bay-ren","pl"],["die Melone","Melonen|Honigmelone","","dee meh-LOH-nuh","f"],["die Avocado","Avocados","","dee ah-voh-KAH-doh","f"]],"veg":[["die Karotte","Möhre|Mohrrübe|Rüebli|Karotten|Möhren","also die Möhre; Swiss: das Rüebli","dee kah-ROT-tuh","f"],["die Kartoffel","Kartoffeln|Erdapfel|Erdäpfel","Austria: der Erdapfel","dee kar-TOF-fel","f"],["die Tomate","Tomaten|Paradeiser","Austria: der Paradeiser","dee toh-MAH-tuh","f"],["die Zwiebel","Zwiebeln","","dee TSVEE-bel","f"],["der Knoblauch","","","dair KNOHP-lowkh","m"],["der Brokkoli","","","dair BROK-koh-lee","m"],["der Mais","Maiskolben","rhymes with 'rice'; corn on the cob = der Maiskolben","dair MEYES","m"],["die Gurke","Gurken|Salatgurke","a pickle is eine Essiggurke","dee GOOR-kuh","f"],["der Salat","Kopfsalat|Blattsalat","der Salat means both lettuce and salad","dair zah-LAHT","m"],["die Chilischote","Chili|Peperoni|Pfefferoni|Chilis","also just Chili; Austria: der Pfefferoni","dee CHEE-lee-shoh-tuh","f"],["die Paprika","Paprikaschote|Peperoni","bell pepper, not the spice; Swiss: die Peperoni","dee PAH-pree-kah","f"],["die Aubergine","Auberginen|Melanzani","Austria: die Melanzani","dee oh-bair-ZHEE-nuh","f"],["der Pilz","Pilze|Champignon|Champignons|Schwammerl","plural: die Pilze; Austria: das Schwammerl","dair PILTS","m"],["die Bohnen","Bohne|Fisolen","singular: die Bohne","dee BOH-nen","pl"],["der Kürbis","Kürbisse|Zucchini","plural: die Kürbisse; squash/zucchini = die Zucchini","dair KEWR-bis","m"],["die Erbsen","Erbse","singular: die Erbse","dee AIRP-sen","pl"]],"colors":[["rot","","","ROHT",""],["blau","","","BLOW",""],["grün","","","GREWN",""],["gelb","","","GELP",""],["orange","orangefarben","said the French way: oh-RAHN-zhuh","oh-RAHN-zhuh",""],["lila","violett|purpur","","LEE-lah",""],["rosa","pink","","ROH-zah",""],["schwarz","","","SHVARTS",""],["weiß","","","VEYES",""],["grau","","","GROW",""],["braun","","","BROWN",""],["golden","gold|goldfarben","","GOL-den",""],["silbern","silber|silberfarben","","ZIL-bern",""],["türkis","türkisfarben","stress on the end: tewr-KEES","tewr-KEES",""]],"food":[["das Brot","Brote|Brötchen","a bread roll is ein Brötchen","dahs BROHT","n"],["der Käse","","","dair KEH-zuh","m"],["das Ei","Eier","plural: die Eier","dahs EYE","n"],["das Hähnchen","Hühnchen|Huhn|Hendl|Poulet","Austria: das Hendl; Swiss: das Poulet","dahs HEHN-hhen","n"],["das Fleisch","Steak","a steak is das Steak","dahs FLEYESH","n"],["der Fisch","","","dair FISH","m"],["der Reis","","der Reis (rice) vs. die Reise (trip)","dair REYES","m"],["die Nudeln","Nudel|Pasta","everyday word; die Pasta is also used","dee NOO-deln","pl"],["der Salat","","same word as lettuce","dair zah-LAHT","m"],["die Suppe","","","dee ZOOP-puh","f"],["der Taco","Tacos","","dair TAH-koh","m"],["der Burrito","Burritos","","dair boo-REE-toh","m"],["die Pizza","Pizzen|Pizzas","","dee PIT-sah","f"],["der Hamburger","Burger","","dair HAM-boor-guh","m"],["die Pommes","Pommes frites|Fritten","short for Pommes frites","dee POM-mes","pl"],["der Speck","Bacon","","dair SHPEK","m"],["die Butter","","feminine in German","dee BOOT-tuh","f"],["der Kuchen","Torte","die Torte = a fancy layered cake","dair KOO-khen","m"],["das Eis","Speiseeis|Glace|Eiscreme","das Eis means both ice and ice cream; Swiss: die Glace","dahs EYES","n"],["der Keks","Kekse|Plätzchen|Cookie|Guetzli","Christmas cookies: Plätzchen; Swiss: das Guetzli","dair KAYKS","m"],["die Schokolade","Schoko","","dee shoh-koh-LAH-duh","f"]],"drinks":[["der Kaffee","","Austria stresses the end: kaf-FAY","dair KAH-fay","m"],["der Tee","","","dair TAY","m"],["die Milch","","","dee MILHH","f"],["der Saft","Säfte","","dair ZAHFT","m"],["das Bier","","","dahs BEER","n"],["der Wein","","","dair VEYEN","m"],["die Limonade","Limo|Cola|Brause|Softdrink","everyday: die Limo (any sweet soda)","dee lee-moh-NAH-duh","f"],["das Eis","Eiswürfel","ice cubes = die Eiswürfel","dahs EYES","n"],["der Cocktail","Cocktails","","dair KOK-tayl","m"],["der Schnaps","Likör|Spirituosen|Alkohol|Spirituose","der Likör is a sweet liqueur","dair SHNAHPS","m"],["der Mate","Matetee|Mate-Tee","","dair MAH-tay","m"],["der Champagner","Sekt|Schampus","German sparkling wine is der Sekt","dair shahm-PAHN-yuh","m"]],"clothes":[["das T-Shirt","Shirt|T-Shirts|Tshirt","","dahs TEE-shurt","n"],["das Hemd","Hemden|Oberhemd","plural: die Hemden","dahs HEMT","n"],["die Hose","Hosen|lange Hose","singular in German: one Hose = one pair of pants","dee HOH-zuh","f"],["das Kleid","Kleider","die Kleider can also mean clothes","dahs KLEYET","n"],["die Jacke","Mantel|Jacken","a long coat = der Mantel","dee YAHK-kuh","f"],["die Socken","Socke|Strümpfe","singular: die Socke","dee ZOK-ken","pl"],["die Turnschuhe","Turnschuh|Sneaker|Sportschuhe|Sportschuh","also die Sneaker","dee TOORN-shoo-uh","pl"],["die Schuhe","Schuh","singular: der Schuh","dee SHOO-uh","pl"],["die Stiefel","Stiefel","singular: der Stiefel","dee SHTEE-fel","pl"],["die Kappe","Mütze|Basecap|Cap|Schirmmütze|Kappen","die Mütze is also a knit beanie","dee KAHP-puh","f"],["der Hut","Hüte","plural: die Hüte","dair HOOT","m"],["der Schal","Schals","","dair SHAHL","m"],["die Handschuhe","Handschuh","literally 'hand shoes'","dee HAHNT-shoo-uh","pl"],["die Shorts","kurze Hose","also die kurze Hose","dee SHORTS","pl"],["die Handtasche","Tasche|Handtaschen","die Tasche = bag, and also pocket","dee HAHNT-tah-shuh","f"],["die Sonnenbrille","","singular in German: eine Sonnenbrille","dee ZON-nen-bril-luh","f"],["die Brille","","singular in German: one Brille = one pair of glasses","dee BRIL-luh","f"],["der Rucksack","","English borrowed this word from German","dair ROOK-zahk","m"],["die Unterwäsche","Unterhose","underpants = die Unterhose","dee OON-tuh-veh-shuh","f"],["die Wanderschuhe","Wanderschuh|Wanderstiefel|Bergschuhe","wandern = to hike","dee VAHN-duh-shoo-uh","pl"]],"office":[["der Kugelschreiber","Kuli|Stift|Kugelschreiber","everyday: der Kuli","dair KOO-gel-shreye-buh","m"],["der Bleistift","Stift","literally 'lead pen'","dair BLEYE-shtift","m"],["die Büroklammer","Klammer","","dee bew-ROH-klahm-muh","f"],["die Schere","","singular in German: eine Schere","dee SHAY-ruh","f"],["das Lineal","Maßstab","stress on the end: lee-nay-AHL","dahs lee-nay-AHL","n"],["der Ordner","Mappe|Aktenordner|Schnellhefter","a flat folder = die Mappe","dair ORT-nuh","m"],["das Heft","Notizbuch|Schreibheft","das Notizbuch = notebook for notes","dahs HEFT","n"],["das Klemmbrett","","","dahs KLEM-bret","n"],["die Reißzwecke","Pinnnadel|Heftzwecke|Reißnagel|Pinnwandnadel","also die Pinnnadel","dee REYES-tsvek-kuh","f"],["der Mülleimer","Papierkorb|Abfalleimer|Mistkübel|Abfallkorb","office wastebasket: der Papierkorb; Austria: der Mistkübel","dair MEWL-eye-muh","m"],["der Kalender","","","dair kah-LEN-duh","m"],["der Drucker","","drucken = to print","dair DROOK-kuh","m"],["die Aktentasche","Aktenkoffer","","dee AHK-ten-tah-shuh","f"],["der Aktenschrank","Schrank|Hängeregister","","dair AHK-ten-shrahnk","m"],["das Blatt Papier","Blatt|Papier|Zettel","der Zettel = a slip of paper","dahs BLAHT pah-PEER","n"],["der Umschlag","Briefumschlag|Kuvert|Couvert","Austria: das Kuvert","dair OOM-shlahk","m"],["der Karton","Kiste|Schachtel|Kasten","die Schachtel = small box","dair kar-TONG","m"],["der Stuhl","Stühle|Sessel","plural: die Stühle","dair SHTOOL","m"],["das Büro","","stress on the end: bew-ROH","dahs bew-ROH","n"],["der Wachsmalstift","Wachsmalkreide|Buntstift|Malstift","der Buntstift = colored pencil","dair VAHKS-mahl-shtift","m"]],"electronics":[["das Handy","Smartphone|Mobiltelefon|Natel|Telefon","false friend: das Handy is a cell phone; Swiss: das Natel","dahs HEN-dee","n"],["der Laptop","Notebook","also das Notebook","dair LEP-top","m"],["der Computer","Rechner|PC","also der Rechner","dair kom-PYOO-tuh","m"],["die Tastatur","","","dee tahs-tah-TOOR","f"],["die Maus","","same word as the animal","dee MOWS","f"],["die Kopfhörer","Kopfhörer","literally 'head listeners'; singular der Kopfhörer","dee KOPF-hur-ruh","pl"],["der Fernseher","Fernsehen|TV|Glotze","der Fernseher = the TV set; das Fernsehen = TV as a medium","dair FAIRN-zay-uh","m"],["die Kamera","Fotoapparat","","dee KAH-meh-rah","f"],["die Batterie","Akku|Batterien","rechargeable battery = der Akku","dee bah-teh-REE","f"],["der Stecker","Netzstecker|Steckdose","the wall outlet = die Steckdose","dair SHTEK-kuh","m"],["der Controller","Gamepad|Spielecontroller","","dair kon-TROH-luh","m"],["das Radio","","","dahs RAH-dee-oh","n"],["das Mikrofon","Mikro|Mikrophon","","dahs mee-kroh-FOHN","n"],["die Taschenlampe","","literally 'pocket lamp'","dee TAH-shen-lahm-puh","f"],["der Wecker","","wecken = to wake someone up","dair VEK-kuh","m"],["der Drucker","","","dair DROOK-kuh","m"]],"house":[["das Bett","Betten","","dahs BET","n"],["das Sofa","Couch|Sofas","also die Couch","dahs ZOH-fah","n"],["die Dusche","","","dee DOO-shuh","f"],["die Badewanne","Wanne","","dee BAH-duh-vahn-nuh","f"],["die Toilette","Klo|WC|Klosett","everyday: das Klo","dee twah-LET-tuh","f"],["der Spiegel","","","dair SHPEE-gel","m"],["der Besen","","","dair BAY-zen","m"],["der Korb","Körbe","plural: die Körbe","dair KORP","m"],["das Toilettenpapier","Klopapier","everyday: das Klopapier","dahs twah-LET-ten-pah-peer","n"],["die Seife","","","dee ZEYE-fuh","f"],["die Zahnbürste","","der Zahn = tooth, die Bürste = brush","dee TSAHN-bewr-stuh","f"],["die Kerze","Kerzen","","dee KAIR-tsuh","f"],["die Glühbirne","Birne|Glühlampe|Lampe","literally 'glow pear'","dee GLEW-beer-nuh","f"],["das Bild","Gemälde|Bilder","a painting = das Gemälde","dahs BILT","n"],["die Pflanze","Pflanzen|Zimmerpflanze","","dee PFLAHN-tsuh","f"],["das Kuscheltier","Stofftier|Plüschtier|Teddy|Teddybär","literally 'cuddle animal'","dahs KOO-shel-teer","n"],["der Hammer","","plural: die Hämmer","dair HAHM-muh","m"],["die Leiter","Treppe|Stufen","die Leiter = ladder; die Treppe = stairs","dee LEYE-tuh","f"],["der Schwamm","","","dair SHVAHM","m"],["der Eimer","Kübel","Austria: der Kübel","dair EYE-muh","m"]],"kitchen":[["die Pfanne","Bratpfanne","","dee PFAHN-nuh","f"],["der Löffel","","","dair LURF-fel","m"],["das Messer","","","dahs MES-suh","n"],["die Gabel","","","dee GAH-bel","f"],["der Teller","","masculine in German","dair TEL-luh","m"],["die Schüssel","Schale","","dee SHEWS-sel","f"],["die Tasse","Becher|Kaffeebecher","a big mug = der Becher","dee TAHS-suh","f"],["das Glas","Gläser","plural: die Gläser","dahs GLAHS","n"],["die Teekanne","Wasserkocher|Kanne","electric kettle = der Wasserkocher","dee TAY-kahn-nuh","f"],["der Topf","Kochtopf|Töpfe","plural: die Töpfe","dair TOPF","m"],["das Salz","","","dahs ZAHLTS","n"],["das Einmachglas","Glas|Marmeladenglas|Gläser","Any jam or jar glass is often just ein Glas.","dahs INE-mahkh-glahs","n"],["die Stäbchen","Essstäbchen","","dee SHTEHP-hhen","pl"],["die Babyflasche","Fläschchen|Babyfläschchen|Schoppen","also das Fläschchen","dee BAY-bee-flah-shuh","f"],["der Strohhalm","Trinkhalm|Röhrchen|Halm|Strohhalme","literally 'straw stalk'","dair SHTROH-hahlm","m"],["das Eis","Eiswürfel","ice cubes = die Eiswürfel","dahs EYES","n"],["der Feuerlöscher","","löschen = to put out","dair FOY-uh-lur-shuh","m"],["der Herd","Ofen|Kochfeld|Küchenherd","the oven = der Ofen","dair HAIRT","m"]],"restaurant":[["der Koch","Köchin|Küchenchef|Chefkoch","female: die Köchin; der Chef just means boss","dair KOKH","m"],["der Kellner","Kellnerin|Ober|Bedienung","female: die Kellnerin","dair KEL-nuh","m"],["die Rechnung","","Die Rechnung, bitte! = The check, please!","dee REHH-noong","f"],["die Karte","Kreditkarte|Bankkarte|EC-Karte","die Karte can also mean the menu","dee KAR-tuh","f"],["das Trinkgeld","","literally 'drink money'","dahs TRINK-gelt","n"],["das Weinglas","Glas|Weingläser","","dahs VEYEN-glahs","n"],["die Flasche","Flaschen","","dee FLAH-shuh","f"],["die Serviette","Servietten","","dee zair-vee-ET-tuh","f"],["der Nachtisch","Dessert|Nachspeise","also das Dessert; Austria: die Nachspeise","dair NAHKH-tish","m"],["die Speisekarte","Karte|Menü","false friend: das Menü is a set meal","dee SHPEYE-zuh-kar-tuh","f"],["das Brot","Brötchen","","dahs BROHT","n"],["der Tisch","Tische","","dair TISH","m"],["die Vorspeise","Vorspeisen|Starter","","dee FOR-shpeye-zuh","f"],["das Hauptgericht","Hauptspeise|Hauptgang","","dahs HOWPT-geh-rihht","n"],["die Soße","Sauce|Salsa|Soßen","also spelled die Sauce","dee ZOH-suh","f"],["der Pfeffer","","","dair PFEF-fuh","m"]],"store":[["der Einkaufswagen","Wagen|Einkaufswagerl","","dair EYEN-kowfs-vah-gen","m"],["die Einkaufstasche","Tüte|Tasche|Einkaufstüte|Sackerl|Tragetasche","plastic/paper bag = die Tüte; Austria: das Sackerl","dee EYEN-kowfs-tah-shuh","f"],["die Kreditkarte","Karte","","dee kray-DEET-kar-tuh","f"],["das Bargeld","Geld|bar","bar bezahlen = to pay cash","dahs BAR-gelt","n"],["die Münze","Münzen|Geldstück","","dee MEWN-tsuh","f"],["der Kassenbon","Bon|Quittung|Beleg|Kassenzettel","also die Quittung","dair KAHS-sen-bong","m"],["das Preisschild","Etikett|Preis","der Preis = price","dahs PREYES-shilt","n"],["das Geschäft","Laden|Shop|Geschäfte","also der Laden","dahs geh-SHEFT","n"],["das Einkaufszentrum","Shoppingcenter|Einkaufscenter|Center","","dahs EYEN-kowfs-tsen-troom","n"],["das Geschenk","Geschenke|Präsent","","dahs geh-SHENK","n"],["das Paket","Päckchen|Pakete","small package = das Päckchen","dahs pah-KAYT","n"],["die Waage","","","dee VAH-guh","f"],["der Kassierer","Kassiererin|Kasse","female: die Kassiererin; the register = die Kasse","dair kah-SEE-ruh","m"],["der Aufzug","Fahrstuhl|Lift","also der Fahrstuhl; Austria/Switzerland: der Lift","dair OWF-tsook","m"],["der Ausgang","Ausgänge","the entrance = der Eingang","dair OWS-gahng","m"],["der Rabatt","Preisnachlass|Ermäßigung|Sale|Angebot","","dair rah-BAHT","m"]],"animals":[["der Hund","Hunde","plural: die Hunde","dair HOONT","m"],["die Katze","Katzen|Kater","a male cat = der Kater","dee KAHT-tsuh","f"],["das Pferd","Pferde|Ross|Gaul","","dahs PFAIRT","n"],["die Kuh","Kühe","plural: die Kühe","dee KOO","f"],["das Schwein","Schweine|Sau","","dahs SHVEYEN","n"],["das Huhn","Henne|Hühner","a hen specifically = die Henne","dahs HOON","n"],["der Vogel","Vögel","v is said like f; plural: die Vögel","dair FOH-gel","m"],["der Fisch","Fische","","dair FISH","m"],["die Maus","Mäuse","plural: die Mäuse","dee MOWS","f"],["das Kaninchen","Hase|Häschen|Kaninchen","der Hase = hare (also used for bunny)","dahs kah-NEEN-hhen","n"],["der Bär","Bären","","dair BAIR","m"],["der Affe","Affen","","dair AHF-fuh","m"],["der Löwe","Löwen|Löwin","","dair LUR-vuh","m"],["der Elefant","Elefanten","","dair eh-leh-FAHNT","m"],["die Schlange","Schlangen","also means a queue/line of people","dee SHLAHNG-uh","f"],["die Schildkröte","Schildkröten","literally 'shield toad'","dee SHILT-krur-tuh","f"],["der Schmetterling","Falter|Schmetterlinge","","dair SHMET-tuh-ling","m"],["die Biene","Bienen","","dee BEE-nuh","f"],["die Ente","Enten","","dee EN-tuh","f"],["das Schaf","Schafe","","dahs SHAHF","n"]],"transport":[["das Auto","Wagen|PKW|Pkw","","dahs OW-toh","n"],["der Bus","Autobus|Busse","","dair BOOS","m"],["das Taxi","","","dahs TAHK-see","n"],["das Flugzeug","Flieger","fliegen = to fly","dahs FLOOK-tsoyk","n"],["das Fahrrad","Rad|Velo|Fahrräder","Swiss: das Velo","dahs FAR-raht","n"],["das Motorrad","Motorräder|Töff","Swiss: der Töff","dahs MOH-tor-raht","n"],["der Zug","Bahn|Eisenbahn","","dair TSOOK","m"],["das Schiff","Boot","a small boat = das Boot","dahs SHIF","n"],["der Lastwagen","LKW|Lkw|Laster","everyday: der LKW (el-kah-VAY)","dair LAHST-vah-gen","m"],["der Krankenwagen","Rettungswagen|Rettung","Austria: die Rettung","dair KRAHN-ken-vah-gen","m"],["das Polizeiauto","Streifenwagen|Polizeiwagen|Polizei","official word: der Streifenwagen","dahs poh-lee-TSEYE-ow-toh","n"],["der Hubschrauber","Helikopter","","dair HOOP-shrow-buh","m"],["die Tankstelle","","tanken = to fill up the tank","dee TAHNK-shtel-luh","f"],["die Ampel","","","dee AHM-pel","f"],["die Autobahn","Schnellstraße|Landstraße","","dee OW-toh-bahn","f"],["die Landkarte","Karte|Stadtplan|Straßenkarte","city map = der Stadtplan","dee LAHNT-kar-tuh","f"]],"mechanic":[["der Reifen","Rad|Räder","the whole wheel = das Rad","dair REYE-fen","m"],["die Autobatterie","Batterie|Akku|Starterbatterie","","dee OW-toh-bah-teh-ree","f"],["der Schraubenschlüssel","Gabelschlüssel|Maulschlüssel|Schlüssel","","dair SHROW-ben-shlew-sel","m"],["der Schraubenzieher","Schraubendreher","also der Schraubendreher","dair SHROW-ben-tsee-uh","m"],["die Schraube","Schrauben|Bolzen","","dee SHROW-buh","f"],["das Öl","Motoröl","","dahs URL","n"],["das Benzin","Sprit|Kraftstoff","don't say Gas: das Gas is gas (vapor) only","dahs ben-TSEEN","n"],["der Werkzeugkasten","Werkzeugkiste|Werkzeugkoffer","das Werkzeug = tools","dair VAIRK-tsoyk-kahs-ten","m"],["der Hammer","","","dair HAHM-muh","m"],["die Säge","Sägen","","dee ZEH-guh","f"],["das Zahnrad","Zahnräder|Getriebe","literally 'tooth wheel'","dahs TSAHN-raht","n"],["der Magnet","Magneten","","dair mahg-NAYT","m"],["die Taschenlampe","","","dee TAH-shen-lahm-puh","f"],["die Arbeitshandschuhe","Handschuhe|Arbeitshandschuh|Handschuh","","dee AR-beyets-hahnt-shoo-uh","pl"],["der Feuerlöscher","","","dair FOY-uh-lur-shuh","m"],["der Autoschlüssel","Schlüssel|Fahrzeugschlüssel","","dair OW-toh-shlew-sel","m"],["der Haken","","","dair HAH-ken","m"],["das Seil","Strick|Tau|Seile","","dahs ZEYEL","n"],["das Auto","Wagen","","dahs OW-toh","n"],["der Schwamm","","","dair SHVAHM","m"]],"feelings":[["glücklich","froh|fröhlich","","GLEWK-lihh",""],["traurig","","final -ig sounds like 'ihh'","TROW-rihh",""],["wütend","sauer|böse|verärgert","everyday 'mad': sauer","VEW-tent",""],["ängstlich","verängstigt|erschrocken|ich habe Angst|Angst","'I'm scared' = ich habe Angst","ENGST-lihh",""],["überrascht","","","ew-buh-RAHSHT",""],["müde","schläfrig","","MEW-duh",""],["verwirrt","durcheinander","","fair-VEERT",""],["besorgt","beunruhigt","","beh-ZORKT",""],["nervös","aufgeregt","","nair-VURS",""],["krank","","","KRAHNK",""],["verliebt","","verliebt in = in love with","fair-LEEPT",""],["ruhig","entspannt|gelassen","","ROO-ihh",""],["verlegen","peinlich|beschämt","es ist mir peinlich = I'm embarrassed","fair-LAY-gen",""],["gelangweilt","","careful: ich bin langweilig means 'I am boring'","geh-LAHNG-veyelt",""],["frustriert","","","froos-TREERT",""],["aufgeregt","begeistert|gespannt","aufgeregt can mean excited or nervous","OWF-geh-raykt",""],["schwindelig","schwindlig|mir ist schwindelig","say mir ist schwindelig (to me it's dizzy)","SHVIN-deh-lihh",""],["ich habe Hunger","ich bin hungrig|hungrig|Hunger","literally 'I have hunger', just like tengo hambre","ihh HAH-buh HOONG-uh",""],["mir ist heiß","heiß|mir ist warm","don't say ich bin heiß: it means 'I'm hot (sexy)'","meer ist HEYES",""],["mir ist kalt","kalt|ich friere","literally 'to me it is cold'","meer ist KAHLT",""],["stolz","","","SHTOLTS",""]],"weather":[["die Sonne scheint","es ist sonnig|sonnig","literally 'the sun shines'","dee ZON-nuh SHEYENT",""],["es regnet","Regen","no -ing form: es regnet = it rains / it's raining","es RAYK-net",""],["es schneit","Schnee","der Schnee = snow","es SHNEYET",""],["es ist bewölkt","bewölkt|wolkig|es ist wolkig|bedeckt","die Wolke = cloud","es ist beh-VURLKT",""],["es ist windig","windig","","es ist VIN-dihh",""],["es ist heiß","heiß|es ist warm","","es ist HEYES",""],["es ist kalt","kalt","","es ist KAHLT",""],["das Gewitter","Sturm|Unwetter","das Gewitter = thunderstorm; der Sturm = windstorm","dahs geh-VIT-tuh","n"],["der Blitz","Blitze","thunder = der Donner","dair BLITS","m"],["der Regenbogen","","","dair RAY-gen-boh-gen","m"],["der Nebel","","","dair NAY-bel","m"],["der Hurrikan","Orkan|Wirbelsturm","","dair HOO-ree-kahn","m"],["der Tornado","Wirbelsturm|Windhose","","dair tor-NAH-doh","m"],["der Regenschirm","Schirm","literally 'rain shield'","dair RAY-gen-sheerm","m"],["die Temperatur","","","dee tem-peh-rah-TOOR","f"],["teilweise bewölkt","heiter bis wolkig|leicht bewölkt|teils bewölkt","forecasts often say heiter bis wolkig","TEYEL-veye-zuh beh-VURLKT",""],["das Eis","Glatteis","icy roads = das Glatteis","dahs EYES","n"],["nachts","in der Nacht|bei Nacht","die Nacht = the night","NAHKHTS",""],["der Sonnenaufgang","","","dair ZON-nen-owf-gahng","m"],["der Sonnenuntergang","","","dair ZON-nen-oon-tuh-gahng","m"]],"body":[["das Auge","Augen","plural: die Augen","dahs OW-guh","n"],["das Ohr","Ohren","","dahs OHR","n"],["die Nase","","","dee NAH-zuh","f"],["der Mund","","","dair MOONT","m"],["der Zahn","Zähne","plural: die Zähne","dair TSAHN","m"],["die Zunge","","","dee TSOONG-uh","f"],["die Hand","Hände","plural: die Hände","dee HAHNT","f"],["der Fuß","Füße","plural: die Füße","dair FOOS","m"],["das Bein","Beine","","dahs BEYEN","n"],["der Arm","Arme","","dair ARM","m"],["das Gehirn","Hirn","","dahs geh-HEERN","n"],["das Herz","","","dahs HAIRTS","n"],["die Haare","Haar","usually plural: die Haare","dee HAH-ruh","pl"],["der Finger","Daumen","thumb = der Daumen","dair FING-uh","m"],["der Knochen","Knochen","","dair KNOH-khen","m"],["der Bart","Bärte","","dair BART","m"]]},"actions":[["Auto fahren","fährt Auto","fahren|Autofahren|Auto","German has no -ing form: Er fährt Auto = he drives / he's driving. fahren → er fährt (a → ä).","OW-toh FAH-ren"],["spazieren gehen","geht spazieren","gehen|spazieren|zu Fuß gehen|laufen; spazieren gehen = to go for a walk","er geht spazieren.","shpah-TSEE-ren GAY-en"],["wandern","wandert","Wandern","false friend: wandern = to hike, not to wander aimlessly.","VAHN-dern"],["essen","isst","Essen","stem change e → i: ich esse, er isst.","ES-sen"],["trinken","trinkt","","regular verb: ich trinke, er trinkt.","TRIN-ken"],["laufen","läuft","joggen|rennen; stem change au → äu: er läuft. joggen also works","rennen = to sprint.","LOW-fen"],["schwimmen","schwimmt","baden","regular in the present: er schwimmt.","SHVIM-men"],["schlafen","schläft","pennen","stem change a → ä: er schläft.","SHLAH-fen"],["lesen","liest","","stem change e → ie: er liest.","LAY-zen"],["schreiben","schreibt","; ei is said 'eye'","er schreibt.","SHREYE-ben"],["kochen","kocht","; der Koch = the cook","er kocht.","KO-khen"],["putzen","putzt","sauber machen|saubermachen|aufräumen","aufräumen = to tidy up (separable: er räumt auf).","POOT-tsen"],["tanzen","tanzt","","z is said 'ts': TAHN-tsen.","TAHN-tsen"],["singen","singt","","der Sänger / die Sängerin = singer.","ZING-en"],["telefonieren","telefoniert","anrufen|am Telefon sein","-ieren verbs stress the ie. anrufen = to call (separable: er ruft an).","teh-leh-foh-NEE-ren"],["arbeiten","arbeitet","","stem ends in -t, so add -et: er arbeitet.","AR-beye-ten"],["einkaufen","kauft ein","einkaufen gehen|shoppen|Einkäufe machen","separable verb: er kauft ein, the prefix jumps to the end.","EYEN-kow-fen"],["spielen","spielt","","used for games, sports and instruments.","SHPEE-len"],["fernsehen","sieht fern","fernschauen|TV schauen|Fernsehen gucken|fernsehen gucken","separable + stem change e → ie: er sieht fern.","FAIRN-zay-en"],["Musik hören","hört Musik","hören|Musik","the object goes before the infinitive: Musik hören.","moo-ZEEK HUR-ren"],["Fahrrad fahren","fährt Fahrrad","Rad fahren|Radfahren|Velo fahren|radeln","fahren → er fährt (a → ä). Swiss: Velo fahren.","FAR-raht FAH-ren"],["klettern","klettert","","regular: er klettert.","KLET-tern"],["trainieren","trainiert","Sport machen|Sport treiben; -ieren verb, stress on ie","also Sport machen.","treh-NEE-ren"],["angeln","angelt","fischen; fishing with a rod = angeln","die Angel = fishing rod.","AHNG-eln"],["reisen","reist","verreisen","die Reise = the trip.","REYE-zen"],["lernen","lernt","studieren","studieren = to study at a university.","LAIR-nen"],["lachen","lacht","","ch after a is the throaty 'kh'.","LAH-khen"],["weinen","weint","heulen","regular: er weint.","VEYE-nen"],["nachdenken","denkt nach","denken|überlegen","separable verb: er denkt nach (he's thinking it over).","NAHKH-deng-ken"],["warten","wartet","; warten auf = to wait for","stem ends in -t: er wartet.","VAR-ten"],["Wäsche waschen","wäscht Wäsche","waschen|die Wäsche machen|Wäsche machen","stem change a → ä: er wäscht.","VEH-shuh VAH-shen"],["bestellen","bestellt","bitten|fragen; bestellen = to order","to ask for = bitten um.","beh-SHTEL-len"],["sagen","sagt","sprechen|reden","sprechen = to speak (stem change: er spricht).","ZAH-gen"],["gehen","geht","fahren|laufen; gehen = go on foot","going by vehicle is fahren.","GAY-en"],["hören","hört","zuhören","zuhören = to listen (separable: er hört zu).","HUR-ren"],["bringen","bringt","mitbringen|holen","irregular past: gebracht.","BRING-en"],["servieren","serviert","einschenken|eingießen","to pour a drink = einschenken (separable: er schenkt ein).","zair-VEE-ren"],["surfen","surft","wellenreiten","same word as in English, said ZUR-fen.","ZUR-fen"],["Ski fahren","fährt Ski","Skifahren|Ski laufen|skifahren; Ski is said 'shee'","fahren → er fährt.","SHEE FAH-ren"],["meditieren","meditiert","","-ieren verb, stress on ie: er meditiert.","meh-dee-TEE-ren"]],"scenes":{"market":"Frau Huber","office":"Lena","techstore":"Jonas","garage":"Meister Klaus","kitchen":"Oma","restaurant":"Stefan","home":"Paul","shop":"Sophie","farm":"Bauer Hans","street":"Polizistin Weber","paint":"Greta","park":"Mia","forecast":"Anna, die Meteorologin","plaza":"Max"}}};
+const PLW=new Set();
+(function localizeVocab(){
+  const X=VOCAB_L10N[LANG]; if(LANG==="es"||!X) return;
+  for(const s of VOCAB){
+    if(s.id==="actions"){ s.t="Actions";
+      s.w=PROG.map((v,i)=>{ const a=X.actions[i]; addPhon(a[0],a[4]); return [v.e,a[0],v.en,[a[1],a[2]].filter(Boolean).join("|"),a[3],"action",a[1],""]; });
+      continue; }
+    const T=X.sets[s.id]; if(!T) continue;
+    s.w=s.w.map((c,i)=>{ const t=T[i]; if(!t) return c; addPhon(t[0],t[3]); if(t[4]==="pl") PLW.add(t[0]);
+      return [c[0],t[0],c[2],t[1],t[2],c[5]||"",undefined,t[4]]; });
+  }
+  for(const sc of SCENES) if(X.scenes[sc.id]) sc.name=X.scenes[sc.id];
+})();
+const isPl=w=>LANG==="es"?/^(los|las)\s/.test(w):LANG==="fr"?/^les\s/i.test(w):PLW.has(w);
 
 const PKEYG="gram_prog";
 const ESTAR_F=[["yo","estoy","I'm"],["tú","estás","You're"],["él","está","He's"],["ella","está","She's"],["nosotros","estamos","We're"],["ellos","están","They're"]];
@@ -2884,7 +3302,7 @@ function renderPgSay(){
 
 /* ---------- Grammar: location (where is it?) ---------- */
 // key, Spanish phrase, English, words accepted when speaking, conflict group (never shown together in a quiz)
-const LOC=[
+const LOC_ES=[
  {k:"top",es:"encima de",en:"on top of",say:"encima|sobre|arriba",g:"vert"},
  {k:"above",es:"arriba de",en:"above",say:"arriba|por encima",g:"vert",note:"Encima de = on top (touching). Arriba de = above. In Mexico arriba de is also used for on top."},
  {k:"under",es:"debajo de",en:"under",say:"debajo|abajo",g:"under"},
@@ -2901,25 +3319,88 @@ const LOC=[
  {k:"there",es:"ahí",en:"there (by you)",say:"ahi",g:"deictic",note:"ahí = there, near the person you're talking to"},
  {k:"overthere",es:"allá",en:"over there (far away)",say:"alla|alli",g:"deictic",note:"allá / allí = over there, far from both of you"}
 ];
-const LOC_SUBJ=[["🐱","el gato","the cat"],["🐶","el perro","the dog"],["⚽","la pelota","the ball"],["🔑","las llaves","the keys"],["🎒","la mochila","the backpack"],["📱","el celular","the phone"]];
+const LOC_SUBJ_ES=[["🐱","el gato","the cat"],["🐶","el perro","the dog"],["⚽","la pelota","the ball"],["🔑","las llaves","the keys"],["🎒","la mochila","the backpack"],["📱","el celular","the phone"]];
 // reference objects: emoji, singular, plural-with-dos, which locations make sense
-const LOC_REF=[["📦","la caja","las dos cajas","the box",["top","above","beside","front","behind","inside","between","near","far","right","left"]],
+const LOC_REF_ES=[["📦","la caja","las dos cajas","the box",["top","above","beside","front","behind","inside","between","near","far","right","left"]],
   ["🚗","el carro","los dos carros","the car",["top","under","beside","front","behind","inside","between","near","far","right","left"]],
   ["🪑","la silla","las dos sillas","the chair",["top","under","beside","front","behind","between","near","far","right","left"]],
   ["🛏️","la cama","las dos camas","the bed",["top","under","beside","front","near","far","right","left"]],
   ["🌳","el árbol","los dos árboles","the tree",["above","under","beside","front","behind","between","near","far","right","left"]],
   ["🏠","la casa","las dos casas","the house",["above","beside","front","behind","inside","between","near","far","right","left"]]];
+// French / German. Field "es" holds the phrase in the language being learned.
+const LOC_FR=[
+ {k:"top",es:"sur",en:"on top of",say:"sur",g:"vert"},
+ {k:"above",es:"au-dessus de",en:"above",say:"au dessus|dessus",g:"vert",note:"Sur = on (touching). Au-dessus de = above (not touching)."},
+ {k:"under",es:"sous",en:"under",say:"sous|dessous",g:"under"},
+ {k:"beside",es:"à côté de",en:"next to",say:"cote",g:"side"},
+ {k:"front",es:"devant",en:"in front of",say:"devant|en face",g:"front"},
+ {k:"behind",es:"derrière",en:"behind",say:"derriere",g:"front"},
+ {k:"inside",es:"dans",en:"inside",say:"dans|dedans|interieur",g:"in"},
+ {k:"between",es:"entre",en:"between",say:"entre",g:"between"},
+ {k:"near",es:"près de",en:"near",say:"pres",g:"side"},
+ {k:"far",es:"loin de",en:"far from",say:"loin",g:"far"},
+ {k:"right",es:"à droite de",en:"to the right of",say:"droite",g:"side"},
+ {k:"left",es:"à gauche de",en:"to the left of",say:"gauche",g:"side"},
+ {k:"here",es:"ici",en:"here (by me)",say:"ici",g:"deictic",note:"ici = right here, by the speaker"},
+ {k:"there",es:"là",en:"there (by you)",say:"la ",g:"deictic",note:"là = there, near the person you're talking to. In casual French là can also mean here."},
+ {k:"overthere",es:"là-bas",en:"over there (far away)",say:"labas",g:"deictic",note:"là-bas = over there, far from both of you"}];
+const LOC_SUBJ_FR=[["🐱","le chat","the cat"],["🐶","le chien","the dog"],["⚽","le ballon","the ball"],["🔑","les clés","the keys"],["🎒","le sac à dos","the backpack"],["📱","le portable","the phone"]];
+const LOC_REF_FR=[["📦","la boîte","les deux boîtes","the box",["top","above","beside","front","behind","inside","between","near","far","right","left"]],
+  ["🚗","la voiture","les deux voitures","the car",["top","under","beside","front","behind","inside","between","near","far","right","left"]],
+  ["🪑","la chaise","les deux chaises","the chair",["top","under","beside","front","behind","between","near","far","right","left"]],
+  ["🛏️","le lit","les deux lits","the bed",["top","under","beside","front","near","far","right","left"]],
+  ["🌳","l'arbre","les deux arbres","the tree",["above","under","beside","front","behind","between","near","far","right","left"]],
+  ["🏠","la maison","les deux maisons","the house",["above","beside","front","behind","inside","between","near","far","right","left"]]];
+const LOC_DE=[
+ {k:"top",es:"auf",en:"on top of",say:"auf |oben",g:"vert"},
+ {k:"above",es:"über",en:"above",say:"uber",g:"vert",note:"auf = on (touching). über = above (not touching). Both take dem / der here because it's about location."},
+ {k:"under",es:"unter",en:"under",say:"unter",g:"under"},
+ {k:"beside",es:"neben",en:"next to",say:"neben",g:"side"},
+ {k:"front",es:"vor",en:"in front of",say:"vor |vorne",g:"front"},
+ {k:"behind",es:"hinter",en:"behind",say:"hinter",g:"front"},
+ {k:"inside",es:"in",en:"inside",say:"im |in |drin",g:"in",note:"in + dem = im: im Auto, im Haus."},
+ {k:"between",es:"zwischen",en:"between",say:"zwischen",g:"between"},
+ {k:"near",es:"in der Nähe von",en:"near",say:"nahe|nah ",g:"side",note:"von + dem = vom: in der Nähe vom Auto."},
+ {k:"far",es:"weit weg von",en:"far from",say:"weit",g:"far"},
+ {k:"right",es:"rechts von",en:"to the right of",say:"rechts",g:"side"},
+ {k:"left",es:"links von",en:"to the left of",say:"links",g:"side"},
+ {k:"here",es:"hier",en:"here (by me)",say:"hier",g:"deictic",note:"hier = right here, by the speaker"},
+ {k:"there",es:"da",en:"there (by you)",say:"da ",g:"deictic",note:"da = there, near the person you're talking to (casually it can also mean here)"},
+ {k:"overthere",es:"dort drüben",en:"over there (far away)",say:"dort|druben",g:"deictic",note:"dort / dort drüben = over there, far from both of you"}];
+const LOC_SUBJ_DE=[["🐱","die Katze","the cat"],["🐶","der Hund","the dog"],["⚽","der Ball","the ball"],["🔑","die Schlüssel","the keys"],["🎒","der Rucksack","the backpack"],["📱","das Handy","the phone"]];
+// German refs also carry the dative form used after a location word: auf DER Kiste, neben DEM Auto
+const LOC_REF_DE=[["📦","die Kiste","den beiden Kisten","the box",["top","above","beside","front","behind","inside","between","near","far","right","left"],"der Kiste"],
+  ["🚗","das Auto","den beiden Autos","the car",["top","under","beside","front","behind","inside","between","near","far","right","left"],"dem Auto"],
+  ["🪑","der Stuhl","den beiden Stühlen","the chair",["top","under","beside","front","behind","between","near","far","right","left"],"dem Stuhl"],
+  ["🛏️","das Bett","den beiden Betten","the bed",["top","under","beside","front","near","far","right","left"],"dem Bett"],
+  ["🌳","der Baum","den beiden Bäumen","the tree",["above","under","beside","front","behind","between","near","far","right","left"],"dem Baum"],
+  ["🏠","das Haus","den beiden Häusern","the house",["above","beside","front","behind","inside","between","near","far","right","left"],"dem Haus"]];
+const LOC={es:LOC_ES,fr:LOC_FR,de:LOC_DE}[LANG], LOC_SUBJ={es:LOC_SUBJ_ES,fr:LOC_SUBJ_FR,de:LOC_SUBJ_DE}[LANG], LOC_REF={es:LOC_REF_ES,fr:LOC_REF_FR,de:LOC_REF_DE}[LANG];
+if(LANG==="de") PLW.add("die Schlüssel");
+// Sentence building per language
+const LX={
+ es:{be:pl=>pl?"están":"está", where:(w,pl)=>`¿Dónde ${pl?"están":"está"} ${w}?`, what:(p,pl)=>`¿Qué ${pl?"están":"está"} ${p}?`, whereT:"¿Dónde está?", whatT:"¿Qué está…?", tapT:"Toca",
+   me:"yo", you:"tú", verb:"estar", and:"y",
+   phrase:(L,n)=>(L.es+" "+n).replace(/\bde el\b/,"del"), side:["lado","junto","cerca","derecha","izquierda"], R:"derecha", Lf:"izquierda", norm:h=>h},
+ fr:{be:pl=>pl?"sont":"est", where:(w,pl)=>`Où ${pl?"sont":"est"} ${w} ?`, what:p=>`Qu'est-ce qui est ${p} ?`, whereT:"Où est… ?", whatT:"Qu'est-ce qui est… ?", tapT:"Touche",
+   me:"moi", you:"toi", verb:"être", and:"et",
+   phrase:(L,n)=>/ de$/.test(L.es)?(n.startsWith("le ")?L.es.replace(/de$/,"du")+n.slice(2):n.startsWith("les ")?L.es.replace(/de$/,"des")+n.slice(3):L.es+" "+n):L.es+" "+n,
+   side:["cote","pres","droite","gauche"], R:"droite", Lf:"gauche", norm:h=>h.replace(/ la bas /g," labas ")},
+ de:{be:pl=>pl?"sind":"ist", where:(w,pl)=>`Wo ${pl?"sind":"ist"} ${w}?`, what:p=>`Was ist ${p}?`, whereT:"Wo ist…?", whatT:"Was ist…?", tapT:"Tipp",
+   me:"ich", you:"du", verb:"sein", and:"und",
+   phrase:(L,n)=>(L.es+" "+n).replace(/\bin dem\b/,"im").replace(/\bvon dem\b/,"vom"), side:["neben","nahe","nah","rechts","links"], R:"rechts", Lf:"links", norm:h=>h}
+}[LANG];
+const refDat=r=>LANG==="de"?r[5]:r[1];
 const locBy=k=>LOC.find(l=>l.k===k);
 // Build one question: picture + Spanish + English. "de el" becomes "del".
 function locMake(k){
-  const L=locBy(k), s=LOC_SUBJ[Math.floor(Math.random()*LOC_SUBJ.length)], pl=s[1].startsWith("las ");
-  const verb=pl?"están":"está", Verb=verb.charAt(0).toUpperCase()+verb.slice(1);
+  const L=locBy(k), s=LOC_SUBJ[Math.floor(Math.random()*LOC_SUBJ.length)], pl=isPl(s[1]);
+  const verb=LX.be(pl);
   if(L.g==="deictic"){
     return {k, s, ref:null, lay:{mir:Math.random()<.5,spk:Math.random()<.5?0:1}, es:`${cap(s[1])} ${verb} ${L.es}.`, en:`${cap(s[2])} ${pl?"are":"is"} ${L.en.replace(/ \(.*\)/,"")}.`};
   }
   const refs=LOC_REF.filter(r=>r[4].includes(k)), r=refs[Math.floor(Math.random()*refs.length)];
-  const target=k==="between"?r[2]:r[1];
-  const phrase=(L.es+" "+target).replace(/\bde el\b/,"del");
+  const phrase=k==="between"?L.es+" "+r[2]:LX.phrase(L,refDat(r));
   return {k, s, ref:r, es:`${cap(s[1])} ${verb} ${phrase}.`, en:`${cap(s[2])} ${pl?"are":"is"} ${L.en} ${k==="between"?"the two "+r[3].replace("the ","").replace(/x$/,"xe")+"s":r[3]}.`};
 }
 // Draw the little scene (300x190 stage). Positions in %, sizes in stage-width units.
@@ -2935,12 +3416,12 @@ function locStage(q, small, teach){
     const pA=26, pB=56, outA=13, outB=69, far=91;
     const spX=lay.spk?pB:pA, liX=lay.spk?pA:pB, spOut=lay.spk?outB:outA, liOut=lay.spk?outA:outB;
     h+=em("🧍",X(pA),62,17,2)+em("🧍‍♀️",X(pB),62,17,2);
-    h+=`<div class="lwho yo" style="left:${X(spX)}%;top:36%">yo 💬</div><div class="lwho" style="left:${X(liX)}%;top:36%">tú</div>`;
+    h+=`<div class="lwho yo" style="left:${X(spX)}%;top:36%">${LX.me} 💬</div><div class="lwho" style="left:${X(liX)}%;top:36%">${LX.you}</div>`;
     const pos={here:[spOut,70,12],there:[liOut,70,12],overthere:[far,64,7]}[q.k];
     h+=em(S,X(pos[0]),pos[1],pos[2],3);
     if(teach){
       h+=`<div class="lmark" style="left:${X(pos[0])}%"></div>`;
-      h+=`<div class="ltag" style="left:${X(spOut)}%">aquí</div><div class="ltag" style="left:${X(liOut)}%">ahí</div><div class="ltag" style="left:${X(far)}%">allá</div>`;
+      h+=`<div class="ltag" style="left:${X(spOut)}%">${locBy("here").es}</div><div class="ltag" style="left:${X(liOut)}%">${locBy("there").es}</div><div class="ltag" style="left:${X(far)}%">${locBy("overthere").es}</div>`;
     }
     return `<div class="lstage${small?" small":""}">${h}</div>`;
   }
@@ -2964,13 +3445,13 @@ function openLocTopic(){
   $("#setTitle").textContent="📍 Where is it?";
   $("#setBody").innerHTML=`
     <div class="tiles">
-      <div class="tile"><div class="v">${b.quiz!=null?b.quiz+"%":"–"}</div><div class="k">best ¿Dónde está?</div></div>
+      <div class="tile"><div class="v">${b.quiz!=null?b.quiz+"%":"–"}</div><div class="k">best ${esc(LX.whereT)}</div></div>
       <div class="tile"><div class="v">${b.listen!=null?b.listen+"%":"–"}</div><div class="k">best Listen & tap</div></div>
       <div class="tile"><div class="v">${b.say!=null?b.say+"%":"–"}</div><div class="k">best Say it</div></div>
       <div class="tile"><div class="v">${LOC.length}</div><div class="k">location phrases</div></div>
     </div>
-    <button class="mode" data-lmode="lesson"><span class="mi">📘</span><span><b>Lesson</b><br><span class="note" style="margin:0">Every phrase with a picture: encima de, debajo de, al lado de, aquí / ahí / allá…</span></span></button>
-    <button class="mode" data-lmode="quiz"><span class="mi">🔤</span><span><b>¿Dónde está?</b><br><span class="note" style="margin:0">Look at the picture, pick where it is</span></span></button>
+    <button class="mode" data-lmode="lesson"><span class="mi">📘</span><span><b>Lesson</b><br><span class="note" style="margin:0">Every phrase with a picture: ${esc(LOC.slice(0,3).map(l=>l.es).join(", "))}, ${esc(LOC.filter(l=>l.g==="deictic").map(l=>l.es).join(" / "))}…</span></span></button>
+    <button class="mode" data-lmode="quiz"><span class="mi">🔤</span><span><b>${esc(LX.whereT)}</b><br><span class="note" style="margin:0">Look at the picture, pick where it is</span></span></button>
     <button class="mode" data-lmode="listen"><span class="mi">👂</span><span><b>Listen & tap</b><br><span class="note" style="margin:0">Hear the sentence, tap the matching picture</span></span></button>
     <button class="mode" data-lmode="say"><span class="mi">🎤</span><span><b>Say it</b><br><span class="note" style="margin:0">Describe where it is out loud</span></span></button>
     <button class="mode" data-lmode="scene"><span class="mi">🏡</span><span><b>Find it! Scene game</b><br><span class="note" style="margin:0">Your vocab words hidden around a scene. Tracks which phrases and words are solid. ${(()=>{const s=(V.best||{}).scene; if(!s) return ""; const n=LOC.filter(l=>((s.p||{})[l.k]||{}).st>=3).length; return n+"/"+LOC.length+" phrases solid.";})()}</span></span></button>`;
@@ -2987,12 +3468,17 @@ function locLesson(){
     return `<div class="sec">${locStage(q,false,true)}<div style="margin-top:8px;font-size:19px;font-weight:700">${esc(L.es)} <span class="note" style="font-size:14px;font-weight:400">· ${esc(L.en)}</span></div>
       <div class="line" style="display:flex;gap:8px;align-items:center;margin-top:4px"><div class="tx" style="flex:1">${tapWords(q.es)}<div class="note" style="margin:0">${esc(q.en)}</div></div><button class="play" data-say="${esc(q.es)}">▶︎</button></div>
       ${L.note?`<div class="note">${esc(L.note)}</div>`:""}</div>`; };
-  gbody(`<div class="sec"><h3>Use <span class="estar-t">estar</span> for location</h3><p style="margin:0">¿Dónde <b>está</b> el gato? El gato <b>está</b> encima de la caja.</p>
-      <p class="note">Most of these end in <b>de</b>. Watch the contraction: <b>de + el = del</b>: debajo <b>del</b> carro, but debajo <b>de la</b> mesa.</p></div>
+  const intro={es:`<div class="sec"><h3>Use <span class="estar-t">estar</span> for location</h3><p style="margin:0">¿Dónde <b>está</b> el gato? El gato <b>está</b> encima de la caja.</p>
+      <p class="note">Most of these end in <b>de</b>. Watch the contraction: <b>de + el = del</b>: debajo <b>del</b> carro, but debajo <b>de la</b> mesa.</p></div>`,
+    fr:`<div class="sec"><h3>Use <span class="estar-t">être</span> for location</h3><p style="margin:0">Où <b>est</b> le chat ? Le chat <b>est</b> sur la boîte.</p>
+      <p class="note">Some phrases end in <b>de</b>. Watch the contractions: <b>de + le = du</b> and <b>de + les = des</b>: à côté <b>du</b> lit, but à côté <b>de la</b> chaise and près <b>de l'</b>arbre.</p></div>`,
+    de:`<div class="sec"><h3>Use <span class="estar-t">sein</span> for location</h3><p style="margin:0">Wo <b>ist</b> die Katze? Die Katze <b>ist</b> auf der Kiste.</p>
+      <p class="note">After a location word the article changes (dative): <b>der → dem</b>, <b>das → dem</b>, <b>die → der</b>: auf <b>dem</b> Stuhl, neben <b>dem</b> Auto, auf <b>der</b> Kiste. Plurals: <b>den</b> beiden Kisten. And <b>in dem = im</b>, <b>von dem = vom</b>.</p></div>`}[LANG];
+  gbody(`${intro}
     ${LOC.filter(l=>l.g!=="deictic").map(l=>card(l.k)).join("")}
-    <div class="sec"><h3>Here, there, over there</h3><p class="note" style="margin-top:0">Spanish has three distances, measured from the people talking. In the pictures, the yellow <b>yo 💬</b> is the one talking and <b>tú</b> is the one listening. In practice the labels aquí / ahí / allá are hidden, the picture can be flipped, and either person can be the one talking, so look at who says <b>yo</b>.</p></div>
+    <div class="sec"><h3>Here, there, over there</h3><p class="note" style="margin-top:0">${LG.name} has three distances, measured from the people talking. In the pictures, the yellow <b>${LX.me} 💬</b> is the one talking and <b>${LX.you}</b> is the one listening. In practice the labels ${LOC.filter(l=>l.g==="deictic").map(l=>l.es).join(" / ")} are hidden, the picture can be flipped, and either person can be the one talking, so look at who says <b>${LX.me}</b>.</p></div>
     ${["here","there","overthere"].map(card).join("")}
-    <button class="btn" id="locToQuiz">Practice: ¿Dónde está? ›</button>`);
+    <button class="btn" id="locToQuiz">Practice: ${esc(LX.whereT)} ›</button>`);
   $("#locToQuiz").onclick=locQuiz;
 }
 function locOptions(k,n=4){
@@ -3002,7 +3488,7 @@ function locOptions(k,n=4){
   return shuffle(picked);
 }
 function locQueue(n){ const ks=[]; while(ks.length<n) ks.push(...shuffle(LOC.map(l=>l.k))); return ks.slice(0,n).map(locMake); }
-function locQuiz(){ game={kind:"locquiz",queue:locQueue(15),total:15,firstTry:0,seen:new Set(),back:locBack}; gameShell("🔤 ¿Dónde está?",""); renderLocQuiz(); }
+function locQuiz(){ game={kind:"locquiz",queue:locQueue(15),total:15,firstTry:0,seen:new Set(),back:locBack}; gameShell("🔤 "+LX.whereT,""); renderLocQuiz(); }
 function locEnd(field,again,label){
   const g=game, pct=Math.round(100*g.firstTry/g.total), b=V.best[LKEY]=V.best[LKEY]||{}; const rec=b[field]==null||pct>b[field]; if(rec){ b[field]=pct; saveV(); }
   $("#gameSub").textContent="";
@@ -3010,13 +3496,12 @@ function locEnd(field,again,label){
     <button class="btn" id="lcAgain">Play again</button><div style="height:10px"></div><button class="btn ghost" id="lcBack">Back</button></div>`);
   $("#lcAgain").onclick=again; $("#lcBack").onclick=locBack;
 }
-const locDeicHint=q=>q.ref?"":`<div class="note" style="text-align:center;margin:2px 0 0">You are <b>yo 💬</b>, the one talking. Is it by you, by <b>tú</b>, or far from both of you?</div>`;
+const locDeicHint=q=>q.ref?"":`<div class="note" style="text-align:center;margin:2px 0 0">You are <b>${LX.me} 💬</b>, the one talking. Is it by you, by <b>${LX.you}</b>, or far from both of you?</div>`;
 function renderLocQuiz(){
   const g=game; $("#gameSub").textContent=`${g.total-g.queue.length}/${g.total} · ${g.firstTry} right first try`;
   if(!g.queue.length) return locEnd("quiz",locQuiz,"first try");
   const q=g.queue[0], opts=locOptions(q.k);
-  const subj=`${cap(q.s[1])} ${q.s[1].startsWith("las ")?"están":"está"}`;
-  gbody(`${locStage(q,false)}<div class="gq">¿Dónde ${q.s[1].startsWith("las ")?"están":"está"} ${esc(q.s[1])}?</div>${locDeicHint(q)}
+  gbody(`${locStage(q,false)}<div class="gq">${esc(LX.where(q.s[1],isPl(q.s[1])))}</div>${locDeicHint(q)}
     <div class="opts" style="margin-top:10px">${opts.map(o=>`<button class="opt" data-k="${o.k}">${esc(o.es)}</button>`).join("")}</div><div id="lqExp"></div>`);
   $("#gameBody").querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
     if(g.lock) return; g.lock=true;
@@ -3036,7 +3521,7 @@ function renderLocListen(){
   const opts=locOptions(q.k).map(o=>o.k===q.k?q:Object.assign(locMake(o.k),{s:q.s},q.lay?{lay:q.lay}:{}));
   gbody(`<div class="helper"><span class="hav">🧑‍🏫</span><div class="bubble"><div class="hn">Profe</div><div class="ht" id="llText" style="${g.showText?"":"filter:blur(6px)"}">${esc(q.es)}</div></div></div>
     <div class="row" style="margin:8px 0"><button class="btn ghost" id="llHear">🔊 Hear again</button><button class="btn ghost" id="llShow">${g.showText?"Hide text":"Show text"}</button></div>
-    ${q.ref?"":`<div class="note" style="text-align:center;margin:0 0 6px">Profe is <b>yo 💬</b>. Tap the picture that matches.</div>`}<div class="pgrid">${opts.map((o,i)=>`<button class="opt pic" data-i="${i}" style="padding:4px">${locStage(o,true)}</button>`).join("")}</div><div id="llMsg" class="note" style="text-align:center;min-height:22px;margin-top:8px"></div>`);
+    ${q.ref?"":`<div class="note" style="text-align:center;margin:0 0 6px">Profe is <b>${LX.me} 💬</b>. Tap the picture that matches.</div>`}<div class="pgrid">${opts.map((o,i)=>`<button class="opt pic" data-i="${i}" style="padding:4px">${locStage(o,true)}</button>`).join("")}</div><div id="llMsg" class="note" style="text-align:center;min-height:22px;margin-top:8px"></div>`);
   say(q.es,"-10%");
   $("#llHear").onclick=()=>say(q.es,"-25%");
   $("#llShow").onclick=()=>{ g.showText=!g.showText; $("#llText").style.filter=g.showText?"":"blur(6px)"; $("#llShow").textContent=g.showText?"Hide text":"Show text"; };
@@ -3052,7 +3537,7 @@ function renderLocSay(){
   const g=game; $("#gameSub").textContent=`${g.total-g.queue.length+1>g.total?g.total:g.total-g.queue.length+1}/${g.total} · ${g.firstTry} correct`;
   if(!g.queue.length) return locEnd("say",locSay,"correct");
   const q=g.queue[0], L=locBy(q.k); g.tries=0; g.peek=false;
-  gbody(`${locStage(q,false)}<div class="gq">¿Dónde ${q.s[1].startsWith("las ")?"están":"está"} ${esc(q.s[1])}?</div>${locDeicHint(q)}
+  gbody(`${locStage(q,false)}<div class="gq">${esc(LX.where(q.s[1],isPl(q.s[1])))}</div>${locDeicHint(q)}
     <div id="lsHint" class="gq" style="font-size:17px;display:none">${tapWords(q.es)}</div>
     <div style="text-align:center;margin-top:12px"><button id="lsMic" class="bigmic"><svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V22h2v-3.08A7 7 0 0 0 19 12h-2z"/></svg></button><div class="note" id="lsLbl" style="margin-top:6px">Tap and answer in a full sentence</div></div>
     <div id="lsRes" class="vres" style="text-align:center"></div>
@@ -3064,15 +3549,15 @@ function renderLocSay(){
     let t=null; try{ t=await listenOnce(); }catch(e){ toast("Mic error: "+e.message,4000); }
     if(!$("#lsMic")) return; m.classList.remove("rec"); $("#lsLbl").textContent="Tap and answer in a full sentence";
     if(!t||!t.text){ $("#lsRes").innerHTML=`<span class="note">Didn't hear you. Try again.</span>`; return; }
-    const h=" "+noAcc(t.text)+" ";
+    const h=LX.norm(" "+noAcc(t.text)+" ");
     // "next to / near / to the right / to the left" pictures overlap, so accept any of them unless the direction is wrong
-    const sideOk=L.g==="side"&&["lado","junto","cerca","derecha","izquierda"].some(w=>h.includes(" "+w))&&!(q.k==="right"&&h.includes("izquierda"))&&!(q.k==="left"&&h.includes("derecha"));
+    const sideOk=L.g==="side"&&LX.side.some(w=>h.includes(" "+w))&&!(q.k==="right"&&h.includes(LX.Lf))&&!(q.k==="left"&&h.includes(LX.R));
     const ok=sideOk||L.say.split("|").some(w=>h.includes(" "+noAcc(w)));
     const said=LOC.find(x=>x.k!==q.k&&!(sideOk&&x.g==="side")&&x.say.split("|").some(w=>h.includes(" "+noAcc(w))));
     const pr=t.pron!=null?`<span class="pill ${cls(t.pron)}">Pronunciation ${t.pron}</span>`:"";
     g.tries++;
     if(ok){ if(g.tries===1&&!g.peek) g.firstTry++; chime(true);
-      const delNote=/ del /.test(q.es)&&/ de el /.test(" "+noAcc(t.text)+" ")?`<div class="note">Tip: de + el = <b>del</b>.</div>`:"";
+      const delNote=LANG==="es"&&/ del /.test(q.es)&&/ de el /.test(" "+noAcc(t.text)+" ")?`<div class="note">Tip: de + el = <b>del</b>.</div>`:"";
       $("#lsRes").innerHTML=`<div class="ok" style="font-size:18px">✓ ${esc(q.es)}</div><div class="note">${esc(q.en)}</div>${delNote}<div style="margin-top:6px">${pr}</div><button class="btn" id="lsNext" style="margin-top:10px">Next ›</button>`;
       $("#lsNext").onclick=()=>{ g.queue.shift(); renderLocSay(); };
     } else { chime(false);
@@ -3087,7 +3572,7 @@ function renderLocSay(){
    Mastery per location phrase and per word lives in V.best.scene and steers the next scenes
    toward what isn't solid yet. */
 const SC_SKIP=new Set(["colors","feelings","weather","actions","body"]);
-const SC_REF=LOC_REF.concat([["🛋️","el sofá","los dos sofás","the sofa",["top","under","beside","front","behind","near","far","right","left"]]]);
+const SC_REF=LOC_REF.concat([{es:["🛋️","el sofá","los dos sofás"],fr:["🛋️","le canapé","les deux canapés"],de:["🛋️","das Sofa","den beiden Sofas"]}[LANG].concat(["the sofa",["top","under","beside","front","behind","near","far","right","left"],"dem Sofa"])]);
 const SC_VERT=["top","above","under","inside","front","behind"];
 const SC_SOLID=3;
 function scStore(){ V.best=V.best||{}; const s=V.best.scene=V.best.scene||{}; s.p=s.p||{}; s.w=s.w||{}; s.scenes=s.scenes||0; return s; }
@@ -3109,17 +3594,17 @@ function scPool(){
     for(const id of ["basics","fruits","animals","house"]){ const s=setById(id); if(!s) continue; for(const c of s.w){ if(pool.length>=12) break; if(!have.has(c[1])&&ARTS.test(c[1])&&!SC_REF.some(r=>r[1]===c[1])&&!String(c[0]).startsWith("#")){ pool.push(c); have.add(c[1]); } } } }
   return {pool, learned:learned.length, filler};
 }
-const scPl=w=>/^(los|las)\s/.test(w);
+const scPl=w=>isPl(w);
 const scEnWord=c=>{ const e=String(c[2]).split(" / ")[0].replace(/\s*\(.*\)/,""); return "the "+e; };
 function scPhrase(k,anc,sc){
   const L=locBy(k);
   if(L.g==="deictic") return {es:L.es,en:L.en.replace(/ \(.*\)/,"")};
-  if(k==="between") return {es:`entre ${sc.A[1]} y ${sc.B[1]}`, en:`between ${sc.A[3]} and ${sc.B[3]}`};
+  if(k==="between") return {es:`${L.es} ${refDat(sc.A)} ${LX.and} ${refDat(sc.B)}`, en:`between ${sc.A[3]} and ${sc.B[3]}`};
   const a=anc==="B"?sc.B:sc.A;
-  return {es:(L.es+" "+a[1]).replace(/\bde el\b/,"del"), en:`${L.en} ${a[3]}`};
+  return {es:LX.phrase(L,refDat(a)), en:`${L.en} ${a[3]}`};
 }
 function scSentence(it,sc){ const p=scPhrase(it.k,it.anc,sc), pl=scPl(it.c[1]);
-  return {es:`${cap(it.c[1])} ${pl?"están":"está"} ${p.es}.`, en:`${cap(scEnWord(it.c))} ${pl?"are":"is"} ${p.en}.`, where:p.es}; }
+  return {es:`${cap(it.c[1])} ${LX.be(pl)} ${p.es}.`, en:`${cap(scEnWord(it.c))} ${pl?"are":"is"} ${p.en}.`, where:p.es}; }
 // ---- build a scene ----
 function scBuild(){
   const {pool}=scPool(), st=scStore();
@@ -3157,7 +3642,7 @@ function scStage(sc){
     const lay=sc.lay, X=x=>lay.mir?100-x:x, pA=26,pB=56,outA=13,outB=69,far=91;
     const spX=lay.spk?pB:pA, liX=lay.spk?pA:pB, spOut=lay.spk?outB:outA, liOut=lay.spk?outA:outB;
     h+=em("🧍",X(pA),62,17,2,"pointer-events:none")+em("🧍‍♀️",X(pB),62,17,2,"pointer-events:none");
-    h+=`<div class="lwho yo" style="left:${X(spX)}%;top:36%">yo 💬</div><div class="lwho" style="left:${X(liX)}%;top:36%">tú</div>`;
+    h+=`<div class="lwho yo" style="left:${X(spX)}%;top:36%">${LX.me} 💬</div><div class="lwho" style="left:${X(liX)}%;top:36%">${LX.you}</div>`;
     const pos={here:[spOut,70,10],there:[liOut,70,10],overthere:[far,62,6]};
     sc.items.forEach((it,i)=>{ const p=pos[it.k]; h+=em(it.c[0],X(p[0]),p[1],p[2],3,"",tag(i)); });
     return `<div class="lstage scene">${h}</div>`;
@@ -3188,7 +3673,7 @@ function scQuestions(sc){
 }
 function scWhereOpts(sc,it){
   const right=scPhrase(it.k,it.anc,sc).es, g=locBy(it.k).g;
-  if(sc.type==="deic") return shuffle(["aquí","ahí","allá"].map(es=>({es,ok:es===right})));
+  if(sc.type==="deic") return shuffle(LOC.filter(l=>l.g==="deictic").map(l=>l.es).map(es=>({es,ok:es===right})));
   const bad=new Set([g]); if(g==="side") bad.add("far"); else if(g==="far") bad.add("side"); else { bad.add("side"); bad.add("far"); }
   // tricky distractors first: the true spots of the other things in the scene
   const cands=[];
@@ -3216,7 +3701,7 @@ function locScene(){
   game={kind:"locscene",back:locBack}; gameShell("🏡 Find it!","");
   const {learned,filler}=scPool();
   gbody(`<div class="sec"><p style="margin:0">Things from your vocab are hidden around a little scene. Answer three kinds of questions:</p>
-    <p class="note">🔤 <b>¿Dónde está…?</b> pick where it is · 👆 <b>Toca</b> read or hear the sentence and tap the thing · 🤔 <b>¿Qué está…?</b> pick the word</p>
+    <p class="note">🔤 <b>${esc(LX.whereT)}</b> pick where it is · 👆 <b>${esc(LX.tapT)}</b> read or hear the sentence and tap the thing · 🤔 <b>${esc(LX.whatT)}</b> pick the word</p>
     <p class="note">${filler?`You've learned ${learned} words that fit a scene so far, so some starter words are mixed in. Learn more vocab sets and they show up here automatically.`:`Using the ${learned} words you've learned. New words join the scenes as you learn them, and words or phrases you miss come back more often.`}</p></div>
     <button class="btn" id="scGo">Start ›</button><div style="height:12px"></div>${scMasteryHtml()}`);
   $("#scGo").onclick=()=>scNewScene();
@@ -3231,12 +3716,12 @@ function scRender(){
     gbody(`${scStage(sc)}<div class="vdone" style="padding-top:14px"><div style="font-size:44px">${g.first===sc.items.length?"🏆":"🏡"}</div><h2>${g.first}/${sc.items.length} first try</h2>
       <button class="btn" id="scNext">Next scene ›</button><div style="height:10px"></div><button class="btn ghost" id="scProg">Progress</button></div>`);
     $("#scNext").onclick=scNewScene; $("#scProg").onclick=locScene; return; }
-  const q=g.qs[0], it=sc.items[q.i], S=scSentence(it,sc), vb=scPl(it.c[1])?"están":"está";
+  const q=g.qs[0], it=sc.items[q.i], S=scSentence(it,sc), pl=scPl(it.c[1]);
   g.tries=0; g.lock=false;
-  const deicHint=sc.type==="deic"?`<div class="note" style="text-align:center;margin:2px 0 0">You are <b>yo 💬</b>, the one talking.</div>`:"";
+  const deicHint=sc.type==="deic"?`<div class="note" style="text-align:center;margin:2px 0 0">You are <b>${LX.me} 💬</b>, the one talking.</div>`:"";
   let prompt="", opts=null;
-  if(q.type==="where"){ prompt=`<div class="gq">¿Dónde ${vb} ${esc(it.c[1])}?</div>`; opts=scWhereOpts(sc,it); }
-  else if(q.type==="what"){ prompt=`<div class="gq">¿Qué ${vb} ${esc(S.where)}?</div>`; opts=scWhatOpts(sc,it); }
+  if(q.type==="where"){ prompt=`<div class="gq">${esc(LX.where(it.c[1],pl))}</div>`; opts=scWhereOpts(sc,it); }
+  else if(q.type==="what"){ prompt=`<div class="gq">${esc(LX.what(S.where,pl))}</div>`; opts=scWhatOpts(sc,it); }
   else prompt=`<div class="gq">👆 ${tapWords(S.es)}</div><div class="row" style="justify-content:center;margin-top:4px"><button class="btn ghost" id="scHear" style="flex:0 1 auto">🔊 Hear it</button></div><div class="note" style="text-align:center">Tap that thing in the picture.</div>`;
   gbody(`${scStage(sc)}${prompt}${deicHint}${opts?`<div class="opts" style="margin-top:10px">${opts.map((o,i)=>`<button class="opt" data-o="${i}">${esc(o.es)}</button>`).join("")}</div>`:""}<div id="scExp"></div>`);
   if(q.type==="tap"){ say(S.es,"-10%"); $("#scHear").onclick=()=>say(S.es,"-25%"); }
@@ -3344,8 +3829,23 @@ function renderDebug(){
 
 /* ---------- boot ---------- */
 $("#appVer").textContent=APP_VERSION;
+function paintLang(){
+  document.querySelectorAll(".lgName").forEach(e=>e.textContent=LG.name);
+  $("#homeTitle").textContent=LG.title; 
+  $("#typeIn").placeholder=LG.typePh; $("#langNote").textContent=LG.note; $("#gramSub").textContent=LG.gramSub;
+  $("#customText").placeholder=LG.custom; document.documentElement.lang=LANG;
+  document.querySelectorAll("#langSeg button").forEach(b=>b.classList.toggle("sel",b.dataset.v===LANG));
+}
+paintLang();
+$("#langSeg").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b||b.dataset.v===LANG) return;
+  readSettings(); toast(`Switching to ${LANGS[b.dataset.v].name}…`); setTimeout(()=>setLang(b.dataset.v),300); });
+function langPicker(){
+  openSheet(`<h2>What do you want to practice?</h2><p class="note" style="margin-top:0">You can switch any time in Settings. Each language keeps its own progress.</p>
+    ${Object.entries(LANGS).map(([k,l])=>`<button class="vocabBtn" data-lang="${k}"><span style="font-size:30px">${l.flag}</span><span><b>${l.name}</b><br><span class="note" style="margin:0">${l.native}</span></span><span style="margin-left:auto;color:var(--muted)">›</span></button>`).join("")}`);
+  $("#sheetIn").querySelectorAll("[data-lang]").forEach(b=>b.onclick=()=>{ const l=b.dataset.lang; if(l===LANG){ S.lang=l; save(); closeSheet(); openSettings(); } else setLang(l); });
+}
 renderToday();
-if(needKeys()) openSettings(); else show("s-home");
+if(needKeys()){ openSettings(); if(!LANG_CHOSEN) langPicker(); } else show("s-home");
 // Pick up new versions right away: check for an updated service worker on every launch
 // and when the app comes back to the foreground; reload once when a new one takes over.
 // Leaving the app closes the mic; the item then offers "Try this one again" (a tap reopens it).
