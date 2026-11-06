@@ -4171,7 +4171,7 @@ function paintLang(){
   renderPostcards(); renderHero();
 }
 paintLang();
-$("#demoBtn").onclick=enterDemo;
+$("#demoBtn").onclick=()=>enterDemo();
 $("#langSeg").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b||b.dataset.v===LANG) return;
   readSettings(); toast(`Switching to ${LANGS[b.dataset.v].name}…`); setTimeout(()=>setLang(b.dataset.v),300); });
 function langPicker(){
