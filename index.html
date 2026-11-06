@@ -347,6 +347,10 @@ html.nomic [data-mode="say"],html.nomic [data-mode="name"],html.nomic [data-gmod
     <label>Azure Speech key</label><input id="azKey" type="password" autocomplete="off" placeholder="32-character key">
     <label>Azure Speech region</label><input id="azRegion" placeholder="eastus" autocapitalize="off">
     <label>Claude API key</label><input id="clKey" type="password" autocomplete="off" placeholder="sk-ant-...">
+    <h2 class="setsec">Bring your progress</h2>
+    <p class="note" style="margin-top:2px">New phone or reinstalled the app? Import the backup file you exported (from Progress or here). It restores progress, vocab and scores for every language. Keys aren't in the file, so enter them above.</p>
+    <div class="row" style="margin-top:8px"><button class="btn ghost" id="setImport">📥 Import backup</button><button class="btn ghost" id="setExport">📤 Export backup</button></div>
+    <input type="file" id="setImportFile" accept="application/json,.json" style="display:none">
     <h2 class="setsec">Tutor & budget</h2>
     <label>Claude model</label>
     <select id="model">
@@ -587,7 +591,7 @@ function tapWords(text){
     return w?`<span class="tw" data-w="${esc(w)}">${esc(tok)}</span>`:esc(tok);
   }).join("");
 }
-const APP_VERSION = "45 (Layover everywhere, full backup)";
+const APP_VERSION = "46 (import backup on Setup)";
 
 const VOICE_SETS = {es:{
   MX:{name:"Mexico",loc:"es-MX",F:"es-MX-DaliaNeural",M:"es-MX-JorgeNeural"},
@@ -1668,6 +1672,7 @@ async function importP(e){
   try{
     const j=JSON.parse(await f.text());
     if(j.stores&&typeof j.stores==="object"){
+      if($("#s-settings").classList.contains("on")) readSettings();   // keep keys typed on Setup but not saved yet
       for(const [k,v] of Object.entries(j.stores)) if(/^hablemos\.(progress|vocab|usage)/.test(k)) localStorage.setItem(k,v);
       if(j.settings){ const keep={azKey:S.azKey,azRegion:S.azRegion,clKey:S.clKey}; S=Object.assign({},DEFAULTS,j.settings,keep,{azRegion:keep.azRegion||j.settings.azRegion||DEFAULTS.azRegion}); save(); }
       toast("Restored all languages. Reloading…"); setTimeout(()=>location.reload(),700); return;
@@ -4109,6 +4114,9 @@ function paintLang(){
 }
 paintLang();
 $("#demoBtn").onclick=()=>enterDemo();
+$("#setImport").onclick=()=>{ readSettings(); $("#setImportFile").click(); };
+$("#setImportFile").onchange=importP;
+$("#setExport").onclick=exportP;
 $("#langSeg").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b||b.dataset.v===LANG) return;
   readSettings(); toast(`Switching to ${LANGS[b.dataset.v].name}…`); setTimeout(()=>setLang(b.dataset.v),300); });
 function langPicker(){
