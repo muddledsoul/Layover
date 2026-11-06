@@ -577,7 +577,7 @@ function tapWords(text){
     return w?`<span class="tw" data-w="${esc(w)}">${esc(tok)}</span>`:esc(tok);
   }).join("");
 }
-const APP_VERSION = "37 (first prompt audio fix)";
+const APP_VERSION = "37 (audio ready ahead of time)";
 
 const VOICE_SETS = {es:{
   MX:{name:"Mexico",loc:"es-MX",F:"es-MX-DaliaNeural",M:"es-MX-JorgeNeural"},
@@ -669,9 +669,14 @@ function speechConfig(){
   if(!sdk) throw new Error("Speech SDK failed to load. Check your connection and reload.");
   return sdk.SpeechConfig.fromSubscription(S.azKey.trim(), S.azRegion.trim());
 }
+const ttsPending=new Map();
 function synth(text, rate){
   const v=voice(); const key=v.name+"|"+rate+"|"+text;
   if(ttsCache.has(key)) return Promise.resolve(ttsCache.get(key));
+  if(ttsPending.has(key)) return ttsPending.get(key);
+  const pr=synthNow(text, rate, v, key).finally(()=>ttsPending.delete(key)); ttsPending.set(key,pr); return pr;
+}
+function synthNow(text, rate, v, key){
   const sdk=window.SpeechSDK; const cfg=speechConfig();
   cfg.speechSynthesisOutputFormat=sdk.SpeechSynthesisOutputFormat.Audio24Khz48KBitRateMonoMp3;
   const ssml=`<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${v.loc}"><voice name="${v.name}"><prosody rate="${rate}">${esc(text)}</prosody></voice></speak>`;
@@ -706,7 +711,29 @@ async function say(text, rate){
       p.play().then(()=>{ blockedClip=null; }).catch(e=>{ DBG.log("error","play blocked ("+(e&&e.name)+"): "+String(text).slice(0,40)); if(my===sayTok){ blockedClip={url,tok:my,at:Date.now()}; toast("🔊 Tap anywhere to hear it",2500); } res(); }); });
   }catch(e){ DBG.log("error","voice: "+e.message); if(my===sayTok) toast("Voice error: "+e.message, 4000); }
 }
-function prefetch(text, rate){ try{ synth(text, rate ?? S.speed).catch(()=>{}); }catch(e){} }
+const preQ=[]; let preBusy=0;
+function prefetch(text, rate, urgent){
+  if(!text||S.muteAll==="1"||needKeys()||!window.SpeechSDK) return;
+  const r=rate ?? S.speed, v=voice(), key=v.name+"|"+r+"|"+text;
+  if(ttsCache.has(key)||ttsPending.has(key)||preQ.some(x=>x.key===key)) return;
+  const job={text,rate:r,key}; urgent?preQ.unshift(job):preQ.push(job); if(preQ.length>120) preQ.length=120; pumpPre();
+}
+function pumpPre(){
+  while(preBusy<2&&preQ.length){ const j=preQ.shift(); preBusy++;
+    let p; try{ p=synth(j.text,j.rate); }catch(e){ p=Promise.reject(e); }
+    p.catch(()=>{}).finally(()=>{ preBusy--; pumpPre(); }); }
+}
+// Warm up the audio a game is about to need, in the order it will be needed.
+function warmGame(){
+  const g=game; if(!g) return; const t=[];
+  if(Array.isArray(g.queue)) for(const it of g.queue.slice(0,24)){
+    if(Array.isArray(it)&&typeof it[0]==="string"&&it[0].includes("___")) t.push(it[0].replace("___",it[1]));
+    else if(it&&it.es) t.push(it.es);
+    else if(it&&it.c&&it.noun) t.push(it.c[1]);
+  }
+  t.forEach(x=>prefetch(x,"-10%"));
+}
+function warmSet(id){ const s=setById(id); if(s) s.w.forEach(c=>prefetch(c[1],"-10%")); }
 // Sound effects are short WAVs generated in code and played through <audio> elements, which keep
 // playing when the iPhone's ring/silent switch is on silent (Web Audio is muted by that switch).
 function makeWav(notes, wave){
@@ -1916,7 +1943,7 @@ function renderCard(){
 function revealEs(auto){
   const c=deck.set.w[deck.queue[0]];
   if(!auto) deck.peekedEs=true;
-  $("#vEs").classList.add("on"); say(c[1],"-15%");
+  $("#vEs").classList.add("on"); say(c[1],"-10%");
 }
 function nextCard(learned){
   const s=deck.set, idx=deck.queue.shift(), c=s.w[idx];
@@ -1970,7 +1997,7 @@ async function vocabMic(){
     const clean=!deck.peekedEs;
     res.innerHTML=`<div class="ok" style="font-size:18px">✓ ${LG.correct}</div><div style="text-align:left">${pronFeedbackHTML(c[1],t,true)}</div>
       <div class="note">${clean?"Card learned. It's out of the deck.":"Good! You peeked, so it'll come back once more."}${t.pron!=null&&t.pron<60?" Tap the word above to hear it, and work on the sound.":""}</div>`;
-    say(c[1],"-15%");
+    say(c[1],"-10%");
     setTimeout(()=>{ if(deck&&deck.set.w[deck.queue[0]]===c) nextCard(clean); },3800);
   } else {
     res.innerHTML=`<div class="err">Not quite. I heard: "${esc(t.text)}"</div><div style="margin-top:6px">${pr}</div>
@@ -2001,7 +2028,7 @@ let curSetId=null, game=null;
 const setById=id=>VOCAB.find(s=>s.id===id);
 function smallPic(c){ return c[0].startsWith("#")?`<span class="swatch sm" style="background:${c[0]}"></span>`:`<span class="vpic sm">${c[0]}</span>`; }
 function openSet(id){
-  $("#setBack").onclick=openVocab; curSetId=id; game=null; const s=setById(id), n=s.w.length;
+  $("#setBack").onclick=openVocab; curSetId=id; game=null; warmSet(id); const s=setById(id), n=s.w.length;
   const st=(V.studied[id]||[]).length, ln=learnedIn(id), b=V.best[id]||{};
   $("#setTitle").textContent=s.ic+" "+s.t;
   $("#setBody").innerHTML=`
@@ -2031,7 +2058,7 @@ $("#setBody").addEventListener("click",e=>{
 $("#setBack").onclick=openVocab;
 $("#gameBack").onclick=()=>{ if(game&&game.timer) clearInterval(game.timer); if(game&&game.kind==="name"){ clearInterval(game.tick); clearTimeout(game.noHear); stopNameStream(); } const back=game&&game.back; game=null; if(back) back(); else openSet(curSetId); };
 const fmtTime=s=>s<60?s+"s":Math.floor(s/60)+"m "+String(s%60).padStart(2,"0")+"s";
-function gameShell(title,sub){ $("#gameTitle").textContent=title; $("#gameSub").textContent=sub||""; show("s-game"); }
+function gameShell(title,sub){ $("#gameTitle").textContent=title; $("#gameSub").textContent=sub||""; show("s-game"); try{ warmGame(); }catch(e){} }
 function gbody(h){ $("#gameBody").innerHTML=h; }
 function markStudied(words){ const l=V.studied[curSetId]=V.studied[curSetId]||[]; for(const w of words) if(!l.includes(w)) l.push(w); saveV(); }
 // Pick n distractors from the set (excluding the answer)
@@ -2426,12 +2453,16 @@ function startScene(sceneId, onlySet){
 function pickFindTarget(){
   const g=game, on=g.board.filter(Boolean);
   if(!on.length){ g.cur=null; return; }
+  // each item on the board gets its prompt once, so its audio can be downloaded ahead of time
+  const pm=g.pmap=g.pmap||new Map(), P=c=>{ if(!pm.has(c[1])) pm.set(c[1],findPrompt(c)); return pm.get(c[1]); };
   g.cur=(g.next&&on.includes(g.next))?g.next:on[Math.floor(Math.random()*on.length)];
-  g.prompt=g.nextPrompt&&g.next===g.cur?g.nextPrompt:findPrompt(g.cur);
+  g.prompt=P(g.cur);
   const rest=on.filter(x=>x!==g.cur);
   g.next=rest.length?rest[Math.floor(Math.random()*rest.length)]:null;
-  g.nextPrompt=g.next?findPrompt(g.next):null;
-  if(g.nextPrompt) prefetch(g.nextPrompt,"-10%");
+  g.nextPrompt=g.next?P(g.next):null;
+  if(g.nextPrompt) prefetch(g.nextPrompt,"-10%",true);
+  rest.forEach(c=>prefetch(P(c),"-10%"));
+  on.forEach(c=>prefetch(LG.noThatIs+" "+c[1],"-10%"));
 }
 function placeItems(n){
   // jittered grid so items don't overlap
@@ -2483,7 +2514,7 @@ function renderFind(){
         // refill this spot with the next unseen word
         g.board[k]=g.pool.length?g.pool.shift():null; if(g.board[k]) g.fresh=k;
         pickFindTarget(); renderFind();
-      },650);
+      },450);
     } else {
       g.tries++; g.misses++; if(!g.missed.includes(c)) g.missed.push(c);
       b.classList.add("hitbad"); setTimeout(()=>b.classList.remove("hitbad"),500);
@@ -3747,7 +3778,8 @@ function locScene(){
   $("#scGo").onclick=()=>scNewScene();
 }
 function scNewScene(){
-  const sc=scBuild(); game={kind:"locscene",back:locScene,sc,qs:scQuestions(sc),total:sc.items.length,first:0}; scRender();
+  const sc=scBuild(); game={kind:"locscene",back:locScene,sc,qs:scQuestions(sc),total:sc.items.length,first:0};
+  sc.items.forEach(it=>prefetch(scSentence(it,sc).es,"-10%")); scRender();
 }
 function scRender(){
   const g=game, sc=g.sc; const done=g.total-g.qs.length;
