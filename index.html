@@ -577,7 +577,7 @@ function tapWords(text){
     return w?`<span class="tw" data-w="${esc(w)}">${esc(tok)}</span>`:esc(tok);
   }).join("");
 }
-const APP_VERSION = "36 (travel journal look)";
+const APP_VERSION = "37 (first prompt audio fix)";
 
 const VOICE_SETS = {es:{
   MX:{name:"Mexico",loc:"es-MX",F:"es-MX-DaliaNeural",M:"es-MX-JorgeNeural"},
@@ -652,11 +652,14 @@ function needKeys(){ return !S.azKey || !S.azRegion || !S.clKey; }
 
 /* ---------- audio / TTS ---------- */
 let unlocked=false;
+let silentWav=null;
 function unlockAudio(){
-  if(unlocked) return; unlocked=true;
-  try{ sfxInit(); for(const a of Object.values(SFX)){ a.muted=true; a.play().then(()=>{ a.pause(); a.currentTime=0; a.muted=false; }).catch(()=>{ a.muted=false; }); } }catch(e){}
+  // Re-prime the voice player on every game start (inside the tap), unless it's already talking.
   const p=$("#player");
-  p.src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
+  if(unlocked){ if(p.paused){ try{ p.src=silentWav||(silentWav=makeWav([[440,0,0.08,0]])); p.play().catch(()=>{}); }catch(e){} } return; }
+  unlocked=true;
+  try{ sfxInit(); for(const a of Object.values(SFX)){ a.muted=true; a.play().then(()=>{ a.pause(); a.currentTime=0; a.muted=false; }).catch(()=>{ a.muted=false; }); } }catch(e){}
+  try{ p.src=silentWav||(silentWav=makeWav([[440,0,0.08,0]])); }catch(e){ p.src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="; }
   p.play().catch(()=>{});
 }
 const ttsCache=new Map();
@@ -685,7 +688,13 @@ function synth(text, rate){
 }
 // Only the most recent request plays: a clip that finishes loading after a newer one was
 // requested is dropped, so late audio never talks over the next prompt.
-let sayTok=0;
+let sayTok=0, blockedClip=null;
+// A tap (not on a game item or button) replays a clip the browser refused to start on its own.
+document.addEventListener("pointerdown",e=>{
+  const b=blockedClip; if(!b) return; blockedClip=null;
+  if(b.tok!==sayTok||Date.now()-b.at>20000||e.target.closest("button,.sit,input,textarea,select,a")) return;
+  const p=$("#player"); p.src=b.url; p.play().catch(()=>{});
+},true);
 async function say(text, rate){
   const my=++sayTok;
   if(S.muteAll==="1") return;
@@ -693,7 +702,8 @@ async function say(text, rate){
     const url=await synth(text, rate ?? S.speed);
     if(my!==sayTok) return;
     DBG.log("play","say: "+String(text).slice(0,40));
-    await new Promise(res=>{ const p=$("#player"); p.pause(); p.onended=res; p.onerror=res; p.src=url; p.play().catch(()=>res()); });
+    await new Promise(res=>{ const p=$("#player"); p.pause(); p.onended=res; p.onerror=res; p.src=url;
+      p.play().then(()=>{ blockedClip=null; }).catch(e=>{ DBG.log("error","play blocked ("+(e&&e.name)+"): "+String(text).slice(0,40)); if(my===sayTok){ blockedClip={url,tok:my,at:Date.now()}; toast("🔊 Tap anywhere to hear it",2500); } res(); }); });
   }catch(e){ DBG.log("error","voice: "+e.message); if(my===sayTok) toast("Voice error: "+e.message, 4000); }
 }
 function prefetch(text, rate){ try{ synth(text, rate ?? S.speed).catch(()=>{}); }catch(e){} }
