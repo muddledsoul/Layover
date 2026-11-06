@@ -577,7 +577,7 @@ function tapWords(text){
     return w?`<span class="tw" data-w="${esc(w)}">${esc(tok)}</span>`:esc(tok);
   }).join("");
 }
-const APP_VERSION = "37 (audio ready ahead of time)";
+const APP_VERSION = "38 (audio look-ahead within Azure free limits)";
 
 const VOICE_SETS = {es:{
   MX:{name:"Mexico",loc:"es-MX",F:"es-MX-DaliaNeural",M:"es-MX-JorgeNeural"},
@@ -676,7 +676,13 @@ function synth(text, rate){
   if(ttsPending.has(key)) return ttsPending.get(key);
   const pr=synthNow(text, rate, v, key).finally(()=>ttsPending.delete(key)); ttsPending.set(key,pr); return pr;
 }
+// Azure's free tier allows 20 voice requests per 60 seconds. Every request is counted here so
+// background downloads only ever use part of that and the rest stays free for the tutor's voice.
+const TTS_WINDOW=60000, TTS_LIMIT=20, PRE_BUDGET=10;
+const ttsTimes=[];
+const ttsRecent=()=>{ const t=Date.now()-TTS_WINDOW; while(ttsTimes.length&&ttsTimes[0]<t) ttsTimes.shift(); return ttsTimes.length; };
 function synthNow(text, rate, v, key){
+  ttsRecent(); ttsTimes.push(Date.now());
   const sdk=window.SpeechSDK; const cfg=speechConfig();
   cfg.speechSynthesisOutputFormat=sdk.SpeechSynthesisOutputFormat.Audio24Khz48KBitRateMonoMp3;
   const ssml=`<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${v.loc}"><voice name="${v.name}"><prosody rate="${rate}">${esc(text)}</prosody></voice></speak>`;
@@ -704,7 +710,10 @@ async function say(text, rate){
   const my=++sayTok;
   if(S.muteAll==="1") return;
   try{
-    const url=await synth(text, rate ?? S.speed);
+    let url;
+    try{ url=await synth(text, rate ?? S.speed); }
+    catch(e){ if(!/429|too many|throttl|quota/i.test(e.message)) throw e;
+      DBG.log("error","voice throttled, retrying: "+e.message); await new Promise(r=>setTimeout(r,2500)); if(my!==sayTok) return; url=await synth(text, rate ?? S.speed); }
     if(my!==sayTok) return;
     DBG.log("play","say: "+String(text).slice(0,40));
     await new Promise(res=>{ const p=$("#player"); p.pause(); p.onended=res; p.onerror=res; p.src=url;
@@ -716,24 +725,31 @@ function prefetch(text, rate, urgent){
   if(!text||S.muteAll==="1"||needKeys()||!window.SpeechSDK) return;
   const r=rate ?? S.speed, v=voice(), key=v.name+"|"+r+"|"+text;
   if(ttsCache.has(key)||ttsPending.has(key)||preQ.some(x=>x.key===key)) return;
-  const job={text,rate:r,key}; urgent?preQ.unshift(job):preQ.push(job); if(preQ.length>120) preQ.length=120; pumpPre();
+  const job={text,rate:r,key}; urgent?preQ.unshift(job):preQ.push(job); if(preQ.length>8) preQ.length=8; pumpPre();
 }
+let preTimer=null;
 function pumpPre(){
-  while(preBusy<2&&preQ.length){ const j=preQ.shift(); preBusy++;
+  if(preTimer) return;
+  // never during a conversation, and never more than PRE_BUDGET of the last minute's requests
+  if($("#s-chat").classList.contains("on")||$("#s-convo").classList.contains("on")){ preQ.length=0; return; }
+  while(preBusy<1&&preQ.length){
+    if(ttsRecent()>=PRE_BUDGET){ const wait=ttsTimes[ttsTimes.length-PRE_BUDGET]+TTS_WINDOW-Date.now()+200; preTimer=setTimeout(()=>{ preTimer=null; pumpPre(); },Math.max(500,wait)); return; }
+    const j=preQ.shift(); if(ttsCache.has(j.key)||ttsPending.has(j.key)) continue; preBusy++;
     let p; try{ p=synth(j.text,j.rate); }catch(e){ p=Promise.reject(e); }
     p.catch(()=>{}).finally(()=>{ preBusy--; pumpPre(); }); }
 }
-// Warm up the audio a game is about to need, in the order it will be needed.
-function warmGame(){
-  const g=game; if(!g) return; const t=[];
-  if(Array.isArray(g.queue)) for(const it of g.queue.slice(0,24)){
-    if(Array.isArray(it)&&typeof it[0]==="string"&&it[0].includes("___")) t.push(it[0].replace("___",it[1]));
-    else if(it&&it.es) t.push(it.es);
-    else if(it&&it.c&&it.noun) t.push(it.c[1]);
-  }
-  t.forEach(x=>prefetch(x,"-10%"));
+// Rolling look-ahead: the audio for the next couple of items in a game's queue.
+function itemText(it){
+  if(Array.isArray(it)&&typeof it[0]==="string"&&it[0].includes("___")) return it[0].replace("___",it[1]);
+  if(Array.isArray(it)&&typeof it[1]==="string"&&typeof it[2]==="string") return it[1];
+  if(it&&it.es) return it.es; if(it&&it.c&&it.noun) return it.c[1]; if(it&&it.c&&Array.isArray(it.c)) return it.c[1];
+  return null;
 }
-function warmSet(id){ const s=setById(id); if(s) s.w.forEach(c=>prefetch(c[1],"-10%")); }
+function warmGame(reset){
+  const g=game; if(!g) return; if(reset) preQ.length=0;
+  if(Array.isArray(g.queue)) g.queue.slice(0,3).map(itemText).forEach(x=>prefetch(x,"-10%"));
+}
+function warmSet(id){ /* sets are warmed per card by each game instead of all at once */ }
 // Sound effects are short WAVs generated in code and played through <audio> elements, which keep
 // playing when the iPhone's ring/silent switch is on silent (Web Audio is muted by that switch).
 function makeWav(notes, wave){
@@ -2058,8 +2074,8 @@ $("#setBody").addEventListener("click",e=>{
 $("#setBack").onclick=openVocab;
 $("#gameBack").onclick=()=>{ if(game&&game.timer) clearInterval(game.timer); if(game&&game.kind==="name"){ clearInterval(game.tick); clearTimeout(game.noHear); stopNameStream(); } const back=game&&game.back; game=null; if(back) back(); else openSet(curSetId); };
 const fmtTime=s=>s<60?s+"s":Math.floor(s/60)+"m "+String(s%60).padStart(2,"0")+"s";
-function gameShell(title,sub){ $("#gameTitle").textContent=title; $("#gameSub").textContent=sub||""; show("s-game"); try{ warmGame(); }catch(e){} }
-function gbody(h){ $("#gameBody").innerHTML=h; }
+function gameShell(title,sub){ $("#gameTitle").textContent=title; $("#gameSub").textContent=sub||""; show("s-game"); try{ warmGame(true); }catch(e){} }
+function gbody(h){ $("#gameBody").innerHTML=h; try{ warmGame(false); }catch(e){} }
 function markStudied(words){ const l=V.studied[curSetId]=V.studied[curSetId]||[]; for(const w of words) if(!l.includes(w)) l.push(w); saveV(); }
 // Pick n distractors from the set (excluding the answer)
 function distractors(set,ans,n){ return shuffle(set.w.filter(c=>c!==ans)).slice(0,n); }
@@ -2458,11 +2474,13 @@ function pickFindTarget(){
   g.cur=(g.next&&on.includes(g.next))?g.next:on[Math.floor(Math.random()*on.length)];
   g.prompt=P(g.cur);
   const rest=on.filter(x=>x!==g.cur);
-  g.next=rest.length?rest[Math.floor(Math.random()*rest.length)]:null;
+  // a short line of upcoming targets, decided now so only audio that will be used is downloaded
+  g.up=(g.up||[]).filter(c=>c!==g.cur&&rest.includes(c));
+  const left=shuffle(rest.filter(c=>!g.up.includes(c))); while(g.up.length<3&&left.length) g.up.push(left.shift());
+  g.next=g.up[0]||null;
   g.nextPrompt=g.next?P(g.next):null;
   if(g.nextPrompt) prefetch(g.nextPrompt,"-10%",true);
-  rest.forEach(c=>prefetch(P(c),"-10%"));
-  on.forEach(c=>prefetch(LG.noThatIs+" "+c[1],"-10%"));
+  g.up.slice(1).forEach(c=>prefetch(P(c),"-10%"));
 }
 function placeItems(n){
   // jittered grid so items don't overlap
@@ -3779,7 +3797,7 @@ function locScene(){
 }
 function scNewScene(){
   const sc=scBuild(); game={kind:"locscene",back:locScene,sc,qs:scQuestions(sc),total:sc.items.length,first:0};
-  sc.items.forEach(it=>prefetch(scSentence(it,sc).es,"-10%")); scRender();
+  sc.items.slice(0,3).forEach(it=>prefetch(scSentence(it,sc).es,"-10%")); scRender();
 }
 function scRender(){
   const g=game, sc=g.sc; const done=g.total-g.qs.length;
