@@ -292,6 +292,7 @@ pre.dbg{white-space:pre-wrap;word-break:break-word;font:11px/1.35 ui-monospace,M
 .demoBar{border:1px dashed var(--accent);border-radius:16px;padding:12px 14px;margin-bottom:6px;background:var(--sel)}
 .card.locked,.vocabBtn.locked{opacity:.5}
 html.nomic [data-mode="say"],html.nomic [data-mode="name"],html.nomic [data-gmode="say"],html.nomic [data-pmode="say"],html.nomic [data-lmode="say"],html.nomic #cmName,html.nomic #repeatBtn{opacity:.45;filter:grayscale(1)}
+.warnbox{border:1px solid var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent);border-radius:12px;padding:10px 12px;font-size:13.5px;line-height:1.45}
 .setsec{font:italic 600 23px/1.15 var(--disp);color:var(--text);margin:22px 0 2px}
 @media (prefers-reduced-motion:reduce){.postcard{transition:none}}
 </style>
@@ -347,8 +348,9 @@ html.nomic [data-mode="say"],html.nomic [data-mode="name"],html.nomic [data-gmod
     <label>Azure Speech key</label><input id="azKey" type="password" autocomplete="off" placeholder="32-character key">
     <label>Azure Speech region</label><input id="azRegion" placeholder="eastus" autocapitalize="off">
     <label>Claude API key</label><input id="clKey" type="password" autocomplete="off" placeholder="sk-ant-...">
-    <h2 class="setsec">Bring your progress</h2>
-    <p class="note" style="margin-top:2px">New phone or reinstalled the app? Import the backup file you exported (from Progress or here). It restores progress, vocab and scores for every language. Keys aren't in the file, so enter them above.</p>
+    <h2 class="setsec">Back up & restore</h2>
+    <div class="warnbox">⚠️ Your progress lives only inside this app on this phone. <b>Deleting Layover from your home screen, or clearing Safari's website data, erases it for good.</b> Save a backup to Files or iCloud Drive to keep it safe.</div>
+    <p class="note" style="margin-top:8px">New phone or reinstalled the app? Import your backup file to restore progress, vocab and scores for every language.</p>
     <div class="row" style="margin-top:8px"><button class="btn ghost" id="setImport">📥 Import backup</button><button class="btn ghost" id="setExport">📤 Export backup</button></div>
     <input type="file" id="setImportFile" accept="application/json,.json" style="display:none">
     <h2 class="setsec">Tutor & budget</h2>
@@ -594,7 +596,7 @@ function tapWords(text){
 }
 // Semantic versioning (MAJOR.MINOR.PATCH): PATCH for fixes, MINOR for new features, MAJOR for
 // changes that break saved data or how the app is used. Keep sw.js CACHE and CHANGELOG.md in step.
-const APP_VERSION = "1.0.48";
+const APP_VERSION = "1.1.0";
 
 const VOICE_SETS = {es:{
   MX:{name:"Mexico",loc:"es-MX",F:"es-MX-DaliaNeural",M:"es-MX-JorgeNeural"},
@@ -1520,8 +1522,14 @@ function nextPlanItem(){
   const i=P.plan.sessions.findIndex(s=>!s.done);
   return i<0?null:{i, item:P.plan.sessions[i]};
 }
+function needsBackup(){
+  if(DEMO) return false; const t=+S.lastBackup||0, snooze=+S.backupSnooze||0;
+  const worth=P.sessions.length>0||vocabWordsLearned()>=5; return worth&&Date.now()-t>7*864e5&&Date.now()>snooze;
+}
 function renderToday(){
   const el=$("#todayCard"); let h="";
+  if(needsBackup()) h+=`<div class="warnbox" style="margin-bottom:10px"><b>Back up your progress</b><br>${(+S.lastBackup)?"It's been over a week since your last backup.":"You haven't saved a backup yet."} Deleting the app from your home screen would erase everything.
+    <div class="row" style="margin-top:8px"><button class="btn" id="bkNow" style="padding:10px">📤 Back up now</button><button class="btn ghost" id="bkLater" style="padding:10px">Later</button></div></div>`;
   const rd=readiness();
   if(rd&&rd.ready) h+=`<div class="banner">🎉 You've hit every target for <b>${cap(rd.next)}</b>. <a href="#" id="goProg" style="color:var(--ok)">See progress →</a></div>`;
   const n=nextPlanItem();
@@ -1537,6 +1545,7 @@ function renderToday(){
       <button class="btn" id="buildPlanHome">${P.plan?"Build next plan":"Build my training plan"}</button></div>`;
   }
   el.innerHTML=h;
+  const bn=$("#bkNow"); if(bn){ bn.onclick=exportP; $("#bkLater").onclick=()=>{ S.backupSnooze=String(Date.now()+3*864e5); save(); renderToday(); }; }
   const st=$("#startToday"); if(st) st.onclick=()=>startPlanItem(n.i);
   const bp=$("#buildPlanHome"); if(bp) bp.onclick=()=>{ openProgress(); buildPlan(); };
   const gp=$("#goProg"); if(gp) gp.onclick=e=>{ e.preventDefault(); openProgress(); };
@@ -1610,8 +1619,8 @@ function renderProgress(){
   if(P.phrases.length) h+=`<div class="sec"><details><summary style="font-weight:700">Phrase bank (${P.phrases.length})</summary>${P.phrases.slice().reverse().map(p=>`<div class="line" style="display:flex;gap:8px;align-items:flex-start;margin-top:8px"><div class="tx" style="flex:1">${tapWords(p.es)}<div class="note" style="margin:0">${esc(p.en)}</div></div><button class="play" data-say="${esc(p.es)}">▶︎</button></div>`).join("")}</details></div>`;
   if(P.sessions.length) h+=`<div class="sec"><details><summary style="font-weight:700">Session history</summary>${P.sessions.slice().reverse().map(s=>`<div class="hist"><b>${new Date(s.date).toLocaleDateString()}</b> · ${esc(s.scenario)} · ${cap(s.level)}<br><span class="note">${s.turns} turns · pron ${s.avgPron??"–"} · ${s.correctPct}% correct · ${s.minutes}m</span>${s.summary?`<div class="note" style="margin-top:4px">${esc(s.summary)}</div>`:""}</div>`).join("")}</details></div>`;
   h+=`<div class="sec"><h3>Cost this month</h3>${usageHTML()}</div>`;
-  h+=`<div class="sec"><h3>Backup</h3><p class="note" style="margin-top:0">Progress is saved on this phone. Deleting the home-screen icon erases it, so export a backup now and then.</p>
-    <div class="row"><button class="btn ghost" id="exportP">Export</button><button class="btn ghost" id="importP">Import</button></div><input type="file" id="importFile" accept="application/json,.json" style="display:none"></div>`;
+  h+=`<div class="sec"><h3>Backup</h3><div class="warnbox">⚠️ Your progress lives only inside this app on this phone. <b>Deleting Layover from your home screen, or clearing Safari's website data, erases it for good.</b> Save a backup to Files or iCloud Drive to keep it safe.</div><p class="note">${backupAgo()}</p>
+    <div class="row"><button class="btn ghost" id="exportP">📤 Back up</button><button class="btn ghost" id="importP">📥 Restore</button></div><input type="file" id="importFile" accept="application/json,.json" style="display:none"></div>`;
   $("#progBody").innerHTML=h;
   const lu=$("#levelUp"); if(lu) lu.onclick=()=>{ S.level=rd.next; save(); document.querySelectorAll("#levelSeg button").forEach(b=>b.classList.toggle("sel",b.dataset.v===S.level)); toast("Level: "+cap(S.level)+". Building a new plan…"); renderProgress(); buildPlan(); };
   $("#buildPlan").onclick=buildPlan;
@@ -1660,15 +1669,30 @@ Respond ONLY with JSON:
   }catch(e){ const st2=$("#planStatus"); if(st2) st2.textContent="⚠︎ "+e.message; else toast(e.message,4000); }
 }
 
+function backupAgo(){ const t=+S.lastBackup||0; if(!t) return "No backup saved yet.";
+  const d=Math.floor((Date.now()-t)/864e5); return "Last backup: "+(d<1?"today":d===1?"yesterday":d+" days ago")+"."; }
 function exportP(){
+  openSheet(`<h2>Back up your progress</h2>
+    <p class="note" style="margin-top:0">Saves progress, vocab, scores and settings for all three languages in one file. On the next screen choose <b>Save to Files</b> and pick iCloud Drive so it survives losing the phone.</p>
+    <label style="display:flex;gap:10px;align-items:flex-start;color:var(--text);font-size:14.5px;margin:12px 0"><input type="checkbox" id="bkKeys" style="width:auto;margin-top:3px"${S.bkKeys==="1"?" checked":""}><span>Include my API keys<br><span class="note" style="margin:0">Restoring is one tap, no re-entering keys. Anyone with the file could use your keys, so keep it private.</span></span></label>
+    <button class="btn" id="bkGo">Save backup</button><div style="height:8px"></div><button class="btn ghost" onclick="closeSheet()">Cancel</button>`);
+  $("#bkGo").onclick=()=>{ const k=$("#bkKeys").checked; S.bkKeys=k?"1":"0"; save(); closeSheet(); doExport(k); };
+}
+async function doExport(withKeys){
   try{
     // Full backup: progress, vocab and scores for every language, plus settings. API keys are left out.
     const all={}; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(/^hablemos\.(progress|vocab|usage)/.test(k)) all[k]=localStorage.getItem(k); }
-    const st=Object.assign({},S); delete st.azKey; delete st.clKey; delete st.demo;
+    const st=Object.assign({},S); if(!withKeys){ delete st.azKey; delete st.clKey; } delete st.demo;
     const blob=new Blob([JSON.stringify({app:"layover",v:2,exported:new Date().toISOString(),progress:P,stores:all,settings:st},null,1)],{type:"application/json"});
-    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`layover-progress-${dayKey()}.json`;
-    document.body.appendChild(a); a.click(); a.remove();
-  }catch(e){ toast("Export failed: "+e.message,4000); }
+    const name=`layover-backup-${dayKey()}.json`, file=new File([blob],name,{type:"application/json"});
+    let shared=false;
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      try{ await navigator.share({files:[file],title:"Layover backup"}); shared=true; }catch(e){ if(e.name==="AbortError") return; }
+    }
+    if(!shared){ const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); a.remove(); }
+    S.lastBackup=String(Date.now()); save(); toast("Backup saved"+(withKeys?" (includes your keys)":""));
+    if($("#s-progress").classList.contains("on")) renderProgress(); renderToday();
+  }catch(e){ toast("Backup failed: "+e.message,4000); }
 }
 async function importP(e){
   const f=e.target.files[0]; if(!f) return;
@@ -1677,7 +1701,8 @@ async function importP(e){
     if(j.stores&&typeof j.stores==="object"){
       if($("#s-settings").classList.contains("on")) readSettings();   // keep keys typed on Setup but not saved yet
       for(const [k,v] of Object.entries(j.stores)) if(/^hablemos\.(progress|vocab|usage)/.test(k)) localStorage.setItem(k,v);
-      if(j.settings){ const keep={azKey:S.azKey,azRegion:S.azRegion,clKey:S.clKey}; S=Object.assign({},DEFAULTS,j.settings,keep,{azRegion:keep.azRegion||j.settings.azRegion||DEFAULTS.azRegion}); save(); }
+      if(j.settings){ const keep={azKey:S.azKey||j.settings.azKey||"",clKey:S.clKey||j.settings.clKey||"",azRegion:S.azKey?S.azRegion:(j.settings.azRegion||S.azRegion||DEFAULTS.azRegion)};
+        S=Object.assign({},DEFAULTS,j.settings,keep,{lastBackup:String(Date.now())}); save(); }
       toast("Restored all languages. Reloading…"); setTimeout(()=>location.reload(),700); return;
     }
     const p=j.progress||j;
@@ -4167,6 +4192,7 @@ async function checkUpdate(manual){
 }
 $("#checkUpd").onclick=()=>checkUpdate(true);
 setTimeout(()=>checkUpdate(false),2500);
+try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persisted().then(p=>{ if(!p) navigator.storage.persist().then(ok=>DBG.log("app","persistent storage: "+ok)); }); }catch(e){}
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") setTimeout(()=>checkUpdate(false),800); });
 </script>
 </body>
