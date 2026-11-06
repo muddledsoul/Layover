@@ -592,7 +592,9 @@ function tapWords(text){
     return w?`<span class="tw" data-w="${esc(w)}">${esc(tok)}</span>`:esc(tok);
   }).join("");
 }
-const APP_VERSION = "47 (auto-update check)";
+// Semantic versioning (MAJOR.MINOR.PATCH): PATCH for fixes, MINOR for new features, MAJOR for
+// changes that break saved data or how the app is used. Keep sw.js CACHE and CHANGELOG.md in step.
+const APP_VERSION = "1.0.48";
 
 const VOICE_SETS = {es:{
   MX:{name:"Mexico",loc:"es-MX",F:"es-MX-DaliaNeural",M:"es-MX-JorgeNeural"},
@@ -4147,14 +4149,19 @@ if("serviceWorker" in navigator){
 // on iPhone resumes instead of reloading. So ask for the live page directly (a unique URL skips the
 // CDN copy), compare versions, and update as soon as it's safe.
 const updBusy=()=>recording||askRecMode||(session&&$("#s-chat").classList.contains("on"))||(game&&game.kind==="name"&&game.started);
+// Compare versions numerically; older labels like "47 (note)" count as 0.0.47.
+function cmpVer(a,b){
+  const p=x=>{ const m=String(x).match(/^(\d+)\.(\d+)\.(\d+)/); if(m) return m.slice(1).map(Number); const n=String(x).match(/^(\d+)/); return [0,0,n?+n[1]:0]; };
+  const A=p(a), B=p(b); for(let i=0;i<3;i++){ if(A[i]!==B[i]) return A[i]>B[i]?1:-1; } return 0;
+}
 async function checkUpdate(manual){
   let v=null;
   try{ const r=await fetch("./index.html?cb="+Date.now(),{cache:"no-store"}); const m=(await r.text()).match(/const APP_VERSION = "([^"]+)"/); v=m&&m[1]; }
   catch(e){ if(manual) toast("Couldn't check for updates. Are you offline?"); return; }
   if(!v){ if(manual) toast("Couldn't read the latest version"); return; }
-  if(v===APP_VERSION){ if(manual) toast("You're on the latest version ("+v.split(" ")[0]+")"); return; }
+  if(cmpVer(v,APP_VERSION)<=0){ if(manual) toast("You're on the latest version ("+APP_VERSION+")"); return; }
   DBG.log("app","update available: "+v);
-  const go=async()=>{ toast("Updating to version "+v.split(" ")[0]+"…"); try{ const reg=await navigator.serviceWorker.getRegistration(); if(reg) await reg.update(); }catch(e){}
+  const go=async()=>{ toast("Updating to version "+v+"…"); try{ const reg=await navigator.serviceWorker.getRegistration(); if(reg) await reg.update(); }catch(e){}
     setTimeout(()=>{ if(window.__reloadSoon) window.__reloadSoon(); else location.reload(); },900); };
   if(manual||!updBusy()) go(); else toast("An update is ready. It installs when you finish this.",3500);
 }
