@@ -289,7 +289,8 @@ pre.dbg{white-space:pre-wrap;word-break:break-word;font:11px/1.35 ui-monospace,M
 .demoCta{display:flex;gap:12px;align-items:center;margin-top:12px;padding:12px;border-radius:16px;border:1px dashed var(--accent);background:var(--sel)}
 .demoCta .btn{width:auto;flex:none;padding:12px 16px}
 .demoBar{border:1px dashed var(--accent);border-radius:16px;padding:12px 14px;margin-bottom:6px;background:var(--sel)}
-.card.locked{opacity:.45}
+.card.locked,.vocabBtn.locked{opacity:.5}
+html.nomic [data-mode="say"],html.nomic [data-mode="name"],html.nomic [data-gmode="say"],html.nomic [data-pmode="say"],html.nomic [data-lmode="say"],html.nomic #cmName,html.nomic #repeatBtn{opacity:.45;filter:grayscale(1)}
 .setsec{font:italic 600 23px/1.15 var(--disp);color:var(--text);margin:22px 0 2px}
 @media (prefers-reduced-motion:reduce){.postcard{transition:none}}
 </style>
@@ -303,7 +304,7 @@ pre.dbg{white-space:pre-wrap;word-break:break-word;font:11px/1.35 ui-monospace,M
     <h2 class="setsec" style="margin-top:0">Where are you headed?</h2>
     <p class="note" style="margin:2px 0 10px">Pick the language you're learning. Switch any time; each one keeps its own progress, vocab, scores and training plan.</p>
     <div class="postcards" id="langSeg"></div>
-    <div class="demoCta" id="demoCta"><div><b>Not set up yet?</b><br><span class="note" style="margin:0">Try a short café conversation and the Fruits set first, with your phone's own voice. No keys or account needed.</span></div><button class="btn" id="demoBtn">Try the demo</button></div>
+    <div class="demoCta" id="demoCta"><div><b>Not set up yet?</b><br><span class="note" style="margin:0">Try every vocab set, game and grammar lesson with your phone's own free voice. No keys or account needed. The AI conversation partner unlocks once you add keys.</span></div><button class="btn" id="demoBtn">Try the demo</button></div>
     <h2 class="setsec">Your two keys</h2>
     <p class="note" style="margin-top:2px">Azure listens to you and speaks with a native voice. Claude is your tutor. Open the guides below for step-by-step setup. Keys are stored only on this phone (in the browser), never in the app's code. They stay saved through app updates. Only deleting the home-screen icon or clearing Safari website data erases them.</p>
     <div class="guide">
@@ -365,7 +366,7 @@ pre.dbg{white-space:pre-wrap;word-break:break-word;font:11px/1.35 ui-monospace,M
     <p class="note" id="langNote"></p>
     <h2 class="setsec">Demo mode</h2>
     <div class="seg" id="demoSeg"><button data-v="0">Off (use my keys)</button><button data-v="1">On (demo)</button></div>
-    <p class="note" style="margin-top:6px">See exactly what a new user gets before setting up keys: the phone's voice, the scripted café chat and the Fruits set. Your keys stay saved, and demo practice isn't recorded. Switch back to Off to use your keys again.</p>
+    <p class="note" style="margin-top:6px">See exactly what a new user gets before setting up keys: all vocab and grammar on the phone's voice, with the AI conversation locked. Your keys stay saved, and demo practice isn't recorded. Switch back to Off to use your keys again.</p>
     <div style="height:14px"></div>
     <button class="btn" id="saveSettings">Save</button>
     <div style="height:10px"></div>
@@ -414,12 +415,6 @@ pre.dbg{white-space:pre-wrap;word-break:break-word;font:11px/1.35 ui-monospace,M
     <button class="btn" id="startBtn">Start conversation</button>
     <p class="note" style="text-align:center">Tap the mic, speak, tap again to send. Underlined words show pronunciation: green good · yellow close · red needs work. Tap any <span class="lgName">Spanish</span> word, yours or the tutor's, to hear it.</p>
   </div>
-</section>
-
-<!-- DEMO CONVERSATION (scripted, no keys) -->
-<section id="s-demo" class="screen">
-  <header><button class="iconbtn" id="demoBack" aria-label="Back">‹</button><h1 id="demoTitle">Café demo</h1></header>
-  <div class="scroll"><div id="demoChat" style="display:flex;flex-direction:column;gap:12px;padding-bottom:12px"></div><div id="demoInput"></div></div>
 </section>
 
 <!-- PROGRESS -->
@@ -591,7 +586,7 @@ function tapWords(text){
     return w?`<span class="tw" data-w="${esc(w)}">${esc(tok)}</span>`:esc(tok);
   }).join("");
 }
-const APP_VERSION = "41 (demo mode toggle)";
+const APP_VERSION = "42 (demo unlocks all vocab & grammar)";
 
 const VOICE_SETS = {es:{
   MX:{name:"Mexico",loc:"es-MX",F:"es-MX-DaliaNeural",M:"es-MX-JorgeNeural"},
@@ -668,8 +663,11 @@ function needKeys(){ return !S.azKey || !S.azRegion || !S.clKey; }
    a scripted café conversation with pre-written corrections instead of Claude, and only the
    Fruits vocab set. Nothing is saved, and none of the owner's keys are involved. */
 let DEMO=false;
-const DEMO_SET="fruits";
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+// Safari can have recognition but refuse it (e.g. inside a home-screen app); the first refusal greys speaking out.
+let SR_OFF=!SR;
+function srRefused(){ SR_OFF=true; document.documentElement.classList.add("nomic"); }
+const NOMIC="Speaking games need speech recognition, which this browser doesn't offer without your Azure key.";
 function demoVoice(){
   try{ const vs=speechSynthesis.getVoices(), want=(VOICES[S.country]||{}).loc||recogLoc();
     return vs.find(v=>v.lang.replace("_","-")===want)||vs.find(v=>v.lang.toLowerCase().startsWith(LANG)); }catch(e){ return null; }
@@ -685,10 +683,11 @@ function demoSay(text, rate){
 }
 function demoListen(){
   return new Promise((res,rej)=>{
-    if(!SR) return rej(new Error("The demo can't use the mic on this browser. Type your answer instead, or set up your keys for scored speaking."));
+    if(SR_OFF) return rej(new Error(NOMIC));
     const r=new SR(); r.lang=recogLoc(); r.interimResults=false; r.maxAlternatives=1; let got=null, ended=false;
     r.onresult=e=>{ got=e.results[0][0].transcript; };
-    r.onerror=e=>{ if(e.error==="no-speech"||e.error==="aborted") return; ended=true; rej(new Error("Mic: "+e.error)); };
+    r.onerror=e=>{ if(e.error==="no-speech"||e.error==="aborted") return; ended=true;
+      if(/service-not-allowed|language-not-supported/.test(e.error)){ srRefused(); return rej(new Error(NOMIC)); } rej(new Error("Mic: "+e.error)); };
     r.onend=()=>{ if(ended) return; ended=true; res(got?{text:got,words:[],demo:true}:null); };
     try{ r.start(); }catch(e){ rej(e); }
     setTimeout(()=>{ try{ r.stop(); }catch(e){} },9000);
@@ -699,103 +698,22 @@ function enterDemo(quiet){
   if(!quiet) readSettings();
   DEMO=true; demoHadKeys=!needKeys(); if(S.demo!=="1"){ S.demo="1"; save(); }
   document.querySelectorAll("#demoSeg button").forEach(b=>b.classList.toggle("sel",b.dataset.v==="1"));
+  if(SR_OFF) document.documentElement.classList.add("nomic");
   if(quiet){ V={learned:{},stats:{},studied:{},best:{}}; return; }
   unlockAudio();
   try{ speechSynthesis.getVoices(); const u=new SpeechSynthesisUtterance(" "); u.volume=0; speechSynthesis.speak(u); }catch(e){}  // unlock the phone voice inside this tap
   V={learned:{},stats:{},studied:{},best:{}};   // a throwaway scorecard for the demo
-  toast("Demo mode: phone voice, scripted café chat, Fruits set");
+  toast("Demo mode: free phone voice. AI conversation needs keys.");
   goHome();
 }
 function demoHome(){
   $("#todayCard").innerHTML=`<div class="demoBar"><div class="k" style="font:italic 600 19px/1.1 var(--disp);color:var(--accent)">Demo mode</div>
-    <p class="note" style="margin:4px 0 10px">Try the <b>AI Conversation Partner</b> (a scripted café visit) and the <b>Fruits</b> vocab set. The full app uses native Azure voices, scores every sound you say, and the tutor understands anything you say.</p>
+    <p class="note" style="margin:4px 0 10px">Everything runs on your phone's free voice${SR_OFF?"":" and speech recognition"}. With your keys you also get the <b>AI Conversation Partner</b>, a training plan built from your mistakes, native neural voices and a score for every sound you say.${SR_OFF?" This browser can't recognize speech, so speaking games are greyed out.":""}</p>
     <button class="btn" id="demoSetup">${demoHadKeys?"Turn off demo mode":"Set up my keys"}</button></div>`;
   $("#demoSetup").onclick=demoHadKeys?exitDemo:openSettings;
 }
-const DEMO_CHAT={
- es:{title:"Café en Oaxaca",end:"¡Gracias! Que tengas un buen día.",endEn:"Thanks! Have a nice day.",turns:[
-  {say:"¡Hola, buenas tardes! ¿Qué te gustaría tomar?",en:"Hi, good afternoon! What would you like to drink?",try:["Quiero un café, por favor.","Me da un té, por favor."],kw:"cafe|te|jugo|agua|chocolate|cerveza|refresco|licuado",
-   natural:"¿Me da un café, por favor?",note:"Quiero works, but ¿Me da…? sounds friendlier when ordering in Mexico.",
-   fixes:[[/\bquiero (cafe|te|jugo|agua)\b/,"Quiero un $1, por favor.","Add un / una before the drink: un café, un té, un jugo."],[/\b(yo )?gusta\b/,"Me gustaría un café.","Gustar flips around: me gustaría = I would like."]]},
-  {say:"¡Claro! ¿Lo quieres chico, mediano o grande?",en:"Sure! Do you want it small, medium or large?",try:["Grande, por favor.","Mediano, por favor."],kw:"chico|mediano|grande|pequeno",
-   natural:"Grande, por favor.",note:"Short answers are perfectly natural here.",fixes:[[/\b(largo)\b/,"Grande, por favor.","Careful: largo means long, not large. Large is grande."]]},
-  {say:"Perfecto. ¿Algo de comer? Tenemos pan dulce y tortas.",en:"Perfect. Anything to eat? We have sweet bread and sandwiches.",try:["Sí, un pan dulce, por favor.","No, gracias. Es todo."],kw:"pan|torta|si|no|todo|gracias",
-   natural:"Sí, me da un pan dulce, por favor.",note:"Es todo = that's all. Very handy at any counter.",fixes:[[/\bun torta\b/,"Una torta, por favor.","Torta is feminine: una torta."]]},
-  {say:"Muy bien. Son ochenta pesos. ¿Efectivo o tarjeta?",en:"Great. That's eighty pesos. Cash or card?",try:["Con tarjeta, por favor.","En efectivo."],kw:"tarjeta|efectivo|cash",
-   natural:"Con tarjeta, por favor.",note:"Pay con tarjeta (by card) or en efectivo (in cash).",fixes:[[/\bcash\b/,"En efectivo.","Cash is efectivo."],[/\bpor tarjeta\b/,"Con tarjeta.","Spanish pays con tarjeta, not por tarjeta."]]}]},
- fr:{title:"Café à Paris",end:"Merci, bonne journée !",endEn:"Thanks, have a good day!",turns:[
-  {say:"Bonjour ! Qu'est-ce que je vous sers ?",en:"Hello! What can I get you?",try:["Je voudrais un café, s'il vous plaît.","Un thé, s'il vous plaît."],kw:"cafe|the|chocolat|jus|eau|biere|creme",
-   natural:"Je voudrais un café, s'il vous plaît.",note:"Start with Bonjour, and use je voudrais (I would like). It's the polite way to order.",
-   fixes:[[/\bje veux\b/,"Je voudrais un café, s'il vous plaît.","Je veux (I want) sounds blunt to a waiter. Je voudrais is the polite form."],[/\bune cafe\b/,"Un café, s'il vous plaît.","Café is masculine: un café."]]},
-  {say:"Très bien. Sur place ou à emporter ?",en:"Very good. For here or to go?",try:["Sur place, s'il vous plaît.","À emporter, s'il vous plaît."],kw:"place|emporter|ici",
-   natural:"Sur place, s'il vous plaît.",note:"Sur place = to stay. À emporter = to take away.",fixes:[[/\bpour aller\b/,"À emporter, s'il vous plaît.","Pour aller is a Quebec-style anglicism. In Paris say à emporter."]]},
-  {say:"Avec ceci ? Un croissant, peut-être ?",en:"Anything else? A croissant, maybe?",try:["Oui, un croissant, s'il vous plaît.","Non merci, c'est tout."],kw:"croissant|oui|non|tout|merci|pain",
-   natural:"Oui, avec plaisir, un croissant.",note:"C'est tout = that's all.",fixes:[[/\bune croissant\b/,"Un croissant, s'il vous plaît.","Croissant is masculine: un croissant."]]},
-  {say:"Ça fait quatre euros cinquante. Vous payez par carte ?",en:"That's four fifty. Paying by card?",try:["Oui, par carte.","Non, en espèces."],kw:"carte|especes|liquide|oui|non|cash",
-   natural:"Oui, par carte, s'il vous plaît.",note:"Par carte = by card. En espèces or en liquide = in cash.",fixes:[[/\bavec carte\b/,"Par carte.","French pays par carte, not avec carte."],[/\bcash\b/,"En espèces.","Cash is en espèces (or en liquide)."]]}]},
- de:{title:"Café in München",end:"Danke schön! Einen schönen Tag noch!",endEn:"Thank you! Have a nice day!",turns:[
-  {say:"Hallo! Was darf es sein?",en:"Hi! What can I get you?",try:["Ich hätte gern einen Kaffee, bitte.","Einen Tee, bitte."],kw:"kaffee|tee|kakao|saft|wasser|bier|cappuccino",
-   natural:"Ich hätte gern einen Kaffee, bitte.",note:"Ich hätte gern… (I'd like…) is the friendly way to order. Ich will sounds rude.",
-   fixes:[[/\bein kaffee\b/,"Einen Kaffee, bitte.","Kaffee is masculine (der Kaffee), and when you order it, ein becomes einen."],[/\bich will\b/,"Ich hätte gern einen Kaffee.","Ich will = I want, which sounds demanding. Say ich hätte gern or ich möchte."],[/\bein tee\b/,"Einen Tee, bitte.","Tee is masculine too: einen Tee."]]},
-  {say:"Gern. Zum Hiertrinken oder zum Mitnehmen?",en:"Sure. For here or to go?",try:["Zum Hiertrinken, bitte.","Zum Mitnehmen, bitte."],kw:"hier|mitnehmen|trinken",
-   natural:"Zum Mitnehmen, bitte.",note:"Zum Mitnehmen = to take with you. Zum Hiertrinken (or hier) = to stay.",fixes:[[/\bzu gehen\b/,"Zum Mitnehmen, bitte.","To go is zum Mitnehmen, not zu gehen."]]},
-  {say:"Darf es noch etwas sein? Vielleicht eine Brezel?",en:"Anything else? A pretzel, maybe?",try:["Ja, eine Brezel, bitte.","Nein danke, das ist alles."],kw:"brezel|ja|nein|alles|danke|kuchen",
-   natural:"Ja, gern, eine Brezel.",note:"Das ist alles = that's all.",fixes:[[/\bein brezel\b/,"Eine Brezel, bitte.","Brezel is feminine (die Brezel): eine Brezel."]]},
-  {say:"Das macht vier Euro fünfzig. Mit Karte oder bar?",en:"That's four fifty. Card or cash?",try:["Mit Karte, bitte.","Bar, bitte."],kw:"karte|bar|cash",
-   natural:"Mit Karte, bitte.",note:"Mit Karte = by card. Bar = cash.",fixes:[[/\bcash\b/,"Bar, bitte.","Cash is bar."],[/\bmit der karte\b/,"Mit Karte, bitte.","Just mit Karte, no der."]]}]}
-}[LANG];
-let demo=null;
-function openDemoChat(){
-  demo={i:0,done:false}; $("#demoTitle").textContent=DEMO_CHAT.title; $("#demoChat").innerHTML="";
-  show("s-demo"); unlockAudio(); demoTutor(DEMO_CHAT.turns[0].say,DEMO_CHAT.turns[0].en);
-  demoInput();
-}
-function demoTutor(es,en){
-  const d=document.createElement("div"); d.className="msg tutor";
-  d.innerHTML=`<div class="es">${tapWords(es)}</div><div class="en">${esc(en)}</div><div class="tools"><button class="chip" data-a="play">▶︎ Play</button><button class="chip" data-a="slow">🐢 Slow</button><button class="chip" data-a="en">EN</button></div>`;
-  d.querySelector('[data-a="play"]').onclick=()=>say(es); d.querySelector('[data-a="slow"]').onclick=()=>say(es,"-35%"); d.querySelector('[data-a="en"]').onclick=()=>d.classList.toggle("showen");
-  $("#demoChat").appendChild(d); say(es); d.scrollIntoView({behavior:"smooth",block:"end"});
-}
-function demoInput(){
-  if(demo.done){ $("#demoInput").innerHTML=`<div class="demoBar" style="margin-top:6px"><div class="k" style="font:italic 600 21px/1.1 var(--disp);color:var(--accent)">That's the demo</div>
-      <p class="note" style="margin:6px 0 10px">With your own keys the tutor understands anything you say, plays any scenario you can describe, scores every sound with a native accent model, and builds a training plan from your mistakes. Setup takes about 10 minutes and the voice service is free.</p>
-      <button class="btn" id="dmSetup">Set up my keys</button><div style="height:8px"></div><button class="btn ghost" id="dmAgain">Try it again</button></div>`;
-    $("#dmSetup").onclick=openSettings; $("#dmAgain").onclick=openDemoChat; return; }
-  const t=DEMO_CHAT.turns[demo.i];
-  $("#demoInput").innerHTML=`<div class="note" style="margin:4px 0 6px">💡 You could say: ${t.try.map(x=>`<button class="chip" data-try="${esc(x)}" style="margin:3px 4px 0 0">${esc(x)}</button>`).join("")}</div>
-    <div class="row" style="align-items:center">${SR?`<button class="btn" id="dmMic" style="flex:0 0 auto;width:auto;padding:12px 16px">🎤 Speak</button>`:""}<input id="dmIn" placeholder="${esc(LG.typePh)}" autocapitalize="sentences"><button class="btn ghost" id="dmSend" style="flex:0 0 auto;width:auto;padding:12px 14px">Send</button></div>
-    ${SR?"":`<p class="note">This browser can't do speech recognition, so type your answer. With your keys you just talk.</p>`}`;
-  $("#demoInput").querySelectorAll("[data-try]").forEach(b=>b.onclick=()=>{ $("#dmIn").value=b.dataset.try; say(b.dataset.try,"-10%"); });
-  $("#dmSend").onclick=()=>{ const v=$("#dmIn").value.trim(); if(v) demoAnswer(v); };
-  $("#dmIn").onkeydown=e=>{ if(e.key==="Enter"){ e.preventDefault(); $("#dmSend").click(); } };
-  if(SR) $("#dmMic").onclick=async()=>{ const b=$("#dmMic"); b.textContent="Listening…"; b.disabled=true;
-    let r=null; try{ r=await demoListen(); }catch(e){ toast(e.message,4000); }
-    b.textContent="🎤 Speak"; b.disabled=false; if(r&&r.text) demoAnswer(r.text); else toast("Didn't hear you. Try again or type it."); };
-}
-function demoAnswer(text){
-  const t=DEMO_CHAT.turns[demo.i], h=" "+noAcc(text)+" ";
-  const you=document.createElement("div"); you.className="msg you"; you.innerHTML=`<div class="es">${tapWords(text)}</div>`; $("#demoChat").appendChild(you);
-  const en=/\b(i|want|would|like|please|coffee|tea|yes|no|small|large|card|for here|to go)\b/i.test(text)&&!new RegExp(t.kw).test(noAcc(text).replace(/\bcash\b/,""));
-  const fix=t.fixes.find(f=>f[0].test(h.trim()));
-  const ok=new RegExp("\\b("+t.kw+")\\b").test(noAcc(text));
-  const fb=document.createElement("div"); fb.className="fb";
-  if(en&&!ok){ fb.innerHTML=`<div>💬 In ${LG.name}: <b>${tapWords(t.try[0])}</b> <button class="play" data-say="${esc(t.try[0])}">▶︎</button></div><div class="note">Answering in English is fine. In the full app the tutor turns any English into ${LG.name} for you.</div>`; $("#demoChat").appendChild(fb); fb.scrollIntoView({behavior:"smooth",block:"end"}); return; }
-  if(!ok){ fb.innerHTML=`<div class="note" style="margin:0">The demo only knows this one café script, so try one of the suggestions. The full tutor understands anything.</div>`; $("#demoChat").appendChild(fb); fb.scrollIntoView({behavior:"smooth",block:"end"}); return; }
-  // compare with the suggestions: the closest one is the "more natural" version of what they said
-  const ws=x=>noAcc(x).split(" ").filter(w=>w&&!/^(por|favor|s|il|vous|plait|bitte|please)$/.test(w));
-  const mine=ws(text), best=t.try.map(x=>({x,n:ws(x).filter(w=>mine.includes(w)).length})).sort((a,b)=>b.n-a.n)[0].x;
-  const isTry=mine.every(w=>ws(best).includes(w));
-  fb.innerHTML=fix?`<div><b>Corrected:</b> ${tapWords(fix[1].replace("$1",({cafe:"café",te:"té"})[(h.match(fix[0])||[])[1]]||(h.match(fix[0])||[])[1]||""))}</div><div class="note">${esc(fix[2])}</div>`
-    :isTry?`<div>✓ Perfect.</div>${t.note?`<div class="note">${esc(t.note)}</div>`:""}`
-    :`<div>✓ Understood.</div><div><b>More natural:</b> ${tapWords(best)} <button class="play" data-say="${esc(best)}">▶︎</button></div><div class="note">${esc(t.note)}</div>`;
-  fb.querySelectorAll("[data-say]").forEach(b=>b.onclick=()=>say(b.dataset.say,"-10%"));
-  $("#demoChat").appendChild(fb);
-  demo.i++;
-  if(demo.i>=DEMO_CHAT.turns.length){ demo.done=true; setTimeout(()=>{ demoTutor(DEMO_CHAT.end,DEMO_CHAT.endEn); demoInput(); },600); }
-  else setTimeout(()=>{ const n=DEMO_CHAT.turns[demo.i]; demoTutor(n.say,n.en); demoInput(); },600);
-}
 function exitDemo(){ S.demo="0"; save(); toast("Demo off. Using your keys…"); setTimeout(()=>location.reload(),400); }
-$("#demoBack").onclick=()=>{ try{ speechSynthesis.cancel(); }catch(e){} goHome(); };
+const AI_LOCKED="The AI Conversation Partner needs your API keys. Add them in Setup.";
 
 
 /* ---------- audio / TTS ---------- */
@@ -1249,7 +1167,7 @@ function setBusy(b, label){
 
 // opts (from the training plan): {scenarioId, custom, goal, planIdx}
 async function startSession(opts={}){
-  if(DEMO) return openDemoChat();
+  if(DEMO){ toast(AI_LOCKED,3500); openSettings(); return; }
   if(needKeys()){ toast("Add your keys first"); openSettings(); return; }
   unlockAudio();
   const sid=opts.scenarioId||S.scenario;
@@ -1429,7 +1347,7 @@ function applyReview(d){
   session.reviewedAt=session.log.length;
   saveP();
 }
-function goHome(){ renderToday(); if(DEMO) demoHome(); if($("#hero")) renderHero(); show("s-home"); }
+function goHome(){ renderToday(); if(DEMO) demoHome(); $("#openConvo").classList.toggle("locked",DEMO); if(DEMO) $("#openConvo .note").textContent="🔒 Needs your API keys. Add them in Setup."; if($("#hero")) renderHero(); show("s-home"); }
 function openSheet(html){ $("#sheetIn").innerHTML=html; $("#sheet").classList.add("on"); }
 function closeSheet(){
   $("#sheet").classList.remove("on");
@@ -1702,6 +1620,7 @@ $("#openProgress").onclick=openProgress;
 $("#progBack").onclick=goHome;
 
 async function buildPlan(){
+  if(DEMO){ toast(AI_LOCKED.replace("The AI Conversation Partner","Training plans"),3500); return; }
   if(needKeys()){ toast("Add your keys first"); return; }
   const st=$("#planStatus"); if(st) st.textContent="Building your plan…";
   const rd=readiness();
@@ -2083,17 +2002,17 @@ function renderVocabSets(){
   let h=`<p class="note" style="margin-top:0">Pick a set, then Learn it, quiz yourself, play Matching, or say the words. ${got}/${total} words said without help.</p><div class="grid">`;
   for(const s of VOCAB){
     const n=learnedIn(s.id), pct=Math.round(100*n/s.w.length);
-    h+=`<button class="card${DEMO&&s.id!==DEMO_SET?" locked":""}" data-set="${s.id}"><div class="ic">${s.ic}</div><div class="t">${esc(s.t)}</div><div class="d">${n===s.w.length?"✅ All learned":`${n}/${s.w.length} learned`}</div><div class="meter" style="margin:6px 0 0"><i style="width:${pct}%"></i></div></button>`;
+    h+=`<button class="card" data-set="${s.id}"><div class="ic">${s.ic}</div><div class="t">${esc(s.t)}</div><div class="d">${n===s.w.length?"✅ All learned":`${n}/${s.w.length} learned`}</div><div class="meter" style="margin:6px 0 0"><i style="width:${pct}%"></i></div></button>`;
   }
   $("#vocabSets").innerHTML=h+`</div>`+renderScenesList();
 }
 $("#vocabSets").addEventListener("click",e=>{ const c=e.target.closest("[data-set]"); if(!c) return;
-  if(DEMO&&c.dataset.set!==DEMO_SET){ toast("The demo includes the Fruits set. Set up your keys to unlock all of them.",3500); return; } openSet(c.dataset.set); });
+  openSet(c.dataset.set); });
 
 let deck=null; // {set, queue:[idx], cur, peekedEs, peekedEn, listening, resetArm}
 function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 function startDeck(id){
-  if(DEMO&&!SR){ toast("Saying words needs speech recognition, which this browser lacks in the demo. Try Learn or Multiple choice.",4000); return; }
+  if(DEMO&&SR_OFF){ toast(NOMIC,4000); return; }
   if(needKeys()&&!DEMO){ toast("Add your keys first"); openSettings(); return; }
   unlockAudio();
   const set=VOCAB.find(s=>s.id===id); const done=new Set(V.learned[id]||[]);
@@ -2196,7 +2115,7 @@ $("#vSkip").onclick=()=>{ if(deck&&deck.queue.length) nextCard(false); };
 $("#cardBox").addEventListener("click",e=>{ const b=e.target.closest("[data-say]"); if(b) say(b.dataset.say,b.dataset.rate||"-15%"); });
 $("#deckBack").onclick=()=>openSet(deck.set.id);
 $("#vocabBack").onclick=goHome;
-$("#openConvo").onclick=()=>{ renderScenarios(); show("s-convo"); };
+$("#openConvo").onclick=()=>{ if(DEMO){ toast(AI_LOCKED,3500); openSettings(); return; } renderScenarios(); show("s-convo"); };
 $("#convoBack").onclick=goHome;
 $("#openVocab").onclick=openVocab;
 $("#deckReset").onclick=()=>{
@@ -2622,7 +2541,6 @@ function renderScenesList(){
 // Find it goes through EVERY word in the scene's sets. Up to 16 are on screen; each one you
 // find disappears and its spot refills with the next word until you've found them all.
 function startScene(sceneId, onlySet){
-  if(DEMO){ onlySet=DEMO_SET; }
   if(needKeys()&&!DEMO){ toast("Add your keys first"); openSettings(); return; }
   unlockAudio();
   const sc=SCENES.find(x=>x.id===sceneId);
@@ -2713,7 +2631,6 @@ function renderFind(){
   });
 }
 $("#vocabSets").addEventListener("click",e=>{ const c=e.target.closest("[data-scene]"); if(!c) return;
-  if(DEMO){ if(c.dataset.scene==="market") startScene("market",DEMO_SET); else toast("The demo includes the Farmers market scene (fruits). Set up your keys for the rest.",3500); return; }
   chooseSceneMode(c.dataset.scene); });
 
 /* ---------- Name it: scene points at an item, you say it (timed, scored) ---------- */
@@ -2726,8 +2643,8 @@ function chooseSceneMode(sceneId, onlySet){
   $("#cmName").onclick=()=>{ closeSheet(); startName(sceneId,onlySet); };
 }
 function startName(sceneId, onlySet){
-  if(DEMO){ toast("Name it needs your Azure key (it scores speed and pronunciation). Try Find it.",4000); return; }
-  if(needKeys()){ toast("Add your keys first"); openSettings(); return; }
+  if(DEMO&&SR_OFF){ toast(NOMIC,4000); return; }
+  if(needKeys()&&!DEMO){ toast("Add your keys first"); openSettings(); return; }
   unlockAudio();
   const sc=SCENES.find(x=>x.id===sceneId);
   const words=(onlySet?[onlySet]:sc.sets).flatMap(id=>setById(id).w);
@@ -2751,6 +2668,16 @@ function sceneHTML(g,hi){
 // after a tap, so it is started by the Start button and kept open between items.
 let nameRec=null, nameAc=null, nameT0=0;
 function startNameStream(onFinal,onPartial){
+  if(DEMO){
+    const r=new SR(); r.lang=recogLoc(); r.continuous=true; r.interimResults=true; let live=true;
+    r.onresult=e=>{ for(let i=e.resultIndex;i<e.results.length;i++){ const x=e.results[i]; if(x.isFinal) onFinal({text:x[0].transcript,words:[],demo:true,pron:null}); else onPartial(x[0].transcript); } };
+    r.onerror=e=>{ if(e.error==="not-allowed"){ live=false; toast("Mic blocked. Allow microphone access for this site.",4000); }
+      else if(/service-not-allowed|language-not-supported/.test(e.error)){ live=false; srRefused(); toast(NOMIC,4000); } };
+    r.onend=()=>{ if(live&&nameRec) try{ r.start(); }catch(e){} };
+    nameRec={stopContinuousRecognitionAsync:(a)=>{ live=false; try{ r.stop(); }catch(e){} a&&a(); }, close(){}}; nameAc=null; nameT0=0;
+    try{ r.start(); }catch(e){ toast("Couldn't start mic: "+e.message,4000); }
+    return;
+  }
   const sdk=window.SpeechSDK; const cfg=speechConfig();
   cfg.speechRecognitionLanguage=recogLoc(); cfg.outputFormat=sdk.OutputFormat.Detailed;
   cfg.setProperty(sdk.PropertyId.Speech_SegmentationSilenceTimeoutMs,"600");
@@ -2831,7 +2758,7 @@ function nameHeard(g,r){
   g.results.push({c,ok,heard:r.text,pron:r.pron,secs,s,attempt:g.attempt});
   $("#nTimer").textContent=secs.toFixed(1)+"s";
   $("#nStatus").innerHTML=ok?`<span class="ok">✓ ${esc(c[1])}</span>${g.attempt>1?` <span class="note">(try ${g.attempt})</span>`:""}`:`<span class="err">✗ 3 misses. It's <b>${esc(c[1])}</b></span>`;
-  $("#nRes").innerHTML=`<div class="chips" style="justify-content:center"><span class="pill ${ok&&g.attempt===1?"g":ok?"o":"b"}">Accuracy ${s.acc}/50</span><span class="pill ${cls(r.pron??0)}">Pronunciation ${s.pr}/30</span><span class="pill ${s.sp>=14?"g":s.sp>=7?"o":"b"}">Speed ${s.sp}/20</span></div><div style="font-size:22px;font-weight:700;margin-top:6px">+${s.total}</div>`;
+  $("#nRes").innerHTML=`<div class="chips" style="justify-content:center"><span class="pill ${ok&&g.attempt===1?"g":ok?"o":"b"}">Accuracy ${s.acc}/50</span><span class="pill ${cls(r.pron??0)}">Pronunciation ${r.demo?"(needs key)":s.pr+"/"}30</span><span class="pill ${s.sp>=14?"g":s.sp>=7?"o":"b"}">Speed ${s.sp}/20</span></div><div style="font-size:22px;font-weight:700;margin-top:6px">+${s.total}</div>`;
   if(ok) chime(true); else { chime(false); say(c[1],"-10%"); }
   setTimeout(()=>{ if(game===g){ g.t++; renderName(); } }, ok?1100:2800);
 }
@@ -3309,7 +3236,7 @@ function endSprint(){
   $("#spAgain").onclick=seSprint; $("#spBack").onclick=seBack;
 }
 
-function seSay(){
+function seSay(){ if(DEMO&&SR_OFF){ toast(NOMIC,4000); return; }
   game={kind:"sesay", queue:shuffle(TV.items.slice()).slice(0,12), total:12, good:0, back:seBack};
   gameShell("🎤 Say it · "+TV.title,"");
   renderSeSay();
@@ -3515,7 +3442,7 @@ function renderPgForm(){
   });
 }
 
-function pgSay(){
+function pgSay(){ if(DEMO&&SR_OFF){ toast(NOMIC,4000); return; }
   const items=shuffle(PROG.slice()).slice(0,12).map(v=>({v,s:ESTAR_F[Math.floor(Math.random()*ESTAR_F.length)]}));
   game={kind:"pgsay",queue:items,total:items.length,good:0,back:pgBack};
   gameShell("🎤 Say it · -ando / -iendo","");
@@ -3794,7 +3721,7 @@ function renderLocListen(){
     else { g.tries++; b.classList.add("wrong"); chime(false); $("#llMsg").innerHTML=`<span class="err">That one is: ${esc(o.es)}</span>`; }
   });
 }
-function locSay(){ game={kind:"locsay",queue:locQueue(10),total:10,firstTry:0,back:locBack}; gameShell("🎤 Say it · Where is it?",""); renderLocSay(); }
+function locSay(){ if(DEMO&&SR_OFF){ toast(NOMIC,4000); return; } game={kind:"locsay",queue:locQueue(10),total:10,firstTry:0,back:locBack}; gameShell("🎤 Say it · Where is it?",""); renderLocSay(); }
 function renderLocSay(){
   const g=game; $("#gameSub").textContent=`${g.total-g.queue.length+1>g.total?g.total:g.total-g.queue.length+1}/${g.total} · ${g.firstTry} correct`;
   if(!g.queue.length) return locEnd("say",locSay,"correct");

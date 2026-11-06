@@ -17,7 +17,7 @@ Pick the language on first launch; switch any time in **Settings → Language yo
 
 ## Demo (no keys)
 
-On Setup, **Try the demo** runs a scripted café conversation (with pre-written corrections for common mistakes) and the Fruits vocab set using the phone's built-in voice and Safari speech recognition. No API keys are used and nothing is saved. Saving real keys leaves demo mode.
+On Setup, **Try the demo** (or Settings → Demo mode) unlocks every vocab set, scene game and grammar lesson using the phone's built-in voice, and Safari speech recognition for the speaking games when the browser allows it (otherwise those are greyed out). The AI Conversation Partner and training plans stay locked until keys are added. Nothing practiced in demo mode is saved; turning it off restores your keys and progress.
 
 ## Look
 
