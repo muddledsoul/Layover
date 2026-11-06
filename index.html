@@ -363,6 +363,9 @@ pre.dbg{white-space:pre-wrap;word-break:break-word;font:11px/1.35 ui-monospace,M
     <label>Auto-play tutor replies</label>
     <div class="seg" id="autoplaySeg"><button data-v="1">On</button><button data-v="0">Off</button></div>
     <p class="note" id="langNote"></p>
+    <h2 class="setsec">Demo mode</h2>
+    <div class="seg" id="demoSeg"><button data-v="0">Off (use my keys)</button><button data-v="1">On (demo)</button></div>
+    <p class="note" style="margin-top:6px">See exactly what a new user gets before setting up keys: the phone's voice, the scripted café chat and the Fruits set. Your keys stay saved, and demo practice isn't recorded. Switch back to Off to use your keys again.</p>
     <div style="height:14px"></div>
     <button class="btn" id="saveSettings">Save</button>
     <div style="height:10px"></div>
@@ -588,7 +591,7 @@ function tapWords(text){
     return w?`<span class="tw" data-w="${esc(w)}">${esc(tok)}</span>`:esc(tok);
   }).join("");
 }
-const APP_VERSION = "40 (try-it demo, no keys)";
+const APP_VERSION = "41 (demo mode toggle)";
 
 const VOICE_SETS = {es:{
   MX:{name:"Mexico",loc:"es-MX",F:"es-MX-DaliaNeural",M:"es-MX-JorgeNeural"},
@@ -637,7 +640,7 @@ const LEVELS = {
 
 /* ---------- settings ---------- */
 const DEFAULTS = {azKey:"",azRegion:"eastus",clKey:"",model:"claude-sonnet-5-5",autoplay:"1",
-  scenario:"cafe",level:"beginner",country:"MX",gender:"F",speed:"-15%",custom:"",budget:"10",sfx:"1",muteAll:"0"};
+  scenario:"cafe",level:"beginner",country:"MX",gender:"F",speed:"-15%",custom:"",budget:"10",sfx:"1",muteAll:"0",demo:"0"};
 let S = load();
 if(!VOICES[S.country]) S.country=LG.defCountry;
 // Switch the language being learned. Accent and level are kept per language; keys, budget
@@ -691,8 +694,13 @@ function demoListen(){
     setTimeout(()=>{ try{ r.stop(); }catch(e){} },9000);
   });
 }
-function enterDemo(){
-  readSettings(); DEMO=true; unlockAudio();
+let demoHadKeys=false;
+function enterDemo(quiet){
+  if(!quiet) readSettings();
+  DEMO=true; demoHadKeys=!needKeys(); if(S.demo!=="1"){ S.demo="1"; save(); }
+  document.querySelectorAll("#demoSeg button").forEach(b=>b.classList.toggle("sel",b.dataset.v==="1"));
+  if(quiet){ V={learned:{},stats:{},studied:{},best:{}}; return; }
+  unlockAudio();
   try{ speechSynthesis.getVoices(); const u=new SpeechSynthesisUtterance(" "); u.volume=0; speechSynthesis.speak(u); }catch(e){}  // unlock the phone voice inside this tap
   V={learned:{},stats:{},studied:{},best:{}};   // a throwaway scorecard for the demo
   toast("Demo mode: phone voice, scripted café chat, Fruits set");
@@ -701,8 +709,8 @@ function enterDemo(){
 function demoHome(){
   $("#todayCard").innerHTML=`<div class="demoBar"><div class="k" style="font:italic 600 19px/1.1 var(--disp);color:var(--accent)">Demo mode</div>
     <p class="note" style="margin:4px 0 10px">Try the <b>AI Conversation Partner</b> (a scripted café visit) and the <b>Fruits</b> vocab set. The full app uses native Azure voices, scores every sound you say, and the tutor understands anything you say.</p>
-    <button class="btn" id="demoSetup">Set up my keys</button></div>`;
-  $("#demoSetup").onclick=openSettings;
+    <button class="btn" id="demoSetup">${demoHadKeys?"Turn off demo mode":"Set up my keys"}</button></div>`;
+  $("#demoSetup").onclick=demoHadKeys?exitDemo:openSettings;
 }
 const DEMO_CHAT={
  es:{title:"Café en Oaxaca",end:"¡Gracias! Que tengas un buen día.",endEn:"Thanks! Have a nice day.",turns:[
@@ -786,6 +794,7 @@ function demoAnswer(text){
   if(demo.i>=DEMO_CHAT.turns.length){ demo.done=true; setTimeout(()=>{ demoTutor(DEMO_CHAT.end,DEMO_CHAT.endEn); demoInput(); },600); }
   else setTimeout(()=>{ const n=DEMO_CHAT.turns[demo.i]; demoTutor(n.say,n.en); demoInput(); },600);
 }
+function exitDemo(){ S.demo="0"; save(); toast("Demo off. Using your keys…"); setTimeout(()=>location.reload(),400); }
 $("#demoBack").onclick=()=>{ try{ speechSynthesis.cancel(); }catch(e){} goHome(); };
 
 
@@ -1528,8 +1537,8 @@ function readSettings(){
   S.azKey=$("#azKey").value.trim(); S.azRegion=$("#azRegion").value.trim().toLowerCase(); S.clKey=$("#clKey").value.trim(); S.model=$("#model").value; S.budget=$("#budget").value.trim(); warned80=false; save();
 }
 $("#saveSettings").onclick=()=>{ readSettings(); if(needKeys()){ toast("All three fields are required"); return; }
-  if(DEMO){ toast("Saved. Leaving demo…"); setTimeout(()=>location.reload(),600); return; } toast("Saved"); show("s-home"); };
-$("#setClose").onclick=()=>{ if(DEMO&&needKeys()){ goHome(); return; } if(needKeys()){ toast("Add your keys to continue"); return; } show("s-home"); };
+  if(DEMO&&!demoHadKeys){ S.demo="0"; save(); toast("Saved. Leaving demo…"); setTimeout(()=>location.reload(),600); return; } toast("Saved"); show("s-home"); };
+$("#setClose").onclick=()=>{ if(DEMO){ goHome(); return; } if(needKeys()){ toast("Add your keys to continue"); return; } show("s-home"); };
 $("#openSettings").onclick=openSettings;
 $("#testKeys").onclick=async()=>{
   readSettings(); unlockAudio(); const out=$("#testOut"); out.textContent="Testing…"; let msg=[];
@@ -1537,6 +1546,7 @@ $("#testKeys").onclick=async()=>{
   try{ await claude("Reply with the single word: ok",[{role:"user",content:"ping"}],10); msg.push("✓ Claude OK"); }catch(e){ msg.push("✗ "+e.message); }
   out.textContent=msg.join("  ·  ");
 };
+seg("#demoSeg","demo",()=>{ if(S.demo==="1"&&!DEMO){ S.demo="0"; enterDemo(); } else if(S.demo==="0"&&DEMO) exitDemo(); });
 seg("#autoplaySeg","autoplay"); seg("#sfxSeg","sfx"); seg("#muteSeg","muteAll",paintMute);
 function paintMute(){
   const m=S.muteAll==="1"; const b=$("#gameMute"); if(b){ b.textContent=m?"🔇":"🔊"; b.setAttribute("aria-label",m?"Unmute":"Mute"); }
@@ -4170,7 +4180,7 @@ function langPicker(){
   $("#sheetIn").querySelectorAll("[data-lang]").forEach(b=>b.onclick=()=>{ const l=b.dataset.lang; if(l===LANG){ S.lang=l; save(); closeSheet(); openSettings(); } else setLang(l); });
 }
 renderToday();
-if(needKeys()) openSettings(); else show("s-home");
+if(S.demo==="1"){ enterDemo(true); goHome(); } else if(needKeys()) openSettings(); else show("s-home");
 // Pick up new versions right away: check for an updated service worker on every launch
 // and when the app comes back to the foreground; reload once when a new one takes over.
 // Leaving the app closes the mic; the item then offers "Try this one again" (a tap reopens it).
