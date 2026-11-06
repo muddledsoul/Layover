@@ -6,13 +6,13 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Wanderwort">
+<meta name="apple-mobile-web-app-title" content="Layover">
 <meta name="theme-color" content="#141c36">
 <script>try{document.documentElement.dataset.theme=JSON.parse(localStorage.getItem("hablemos.v1")||"{}").lang||"es"}catch(e){document.documentElement.dataset.theme="es"}</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=2">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=2">
-<title>Wanderwort</title>
+<title>Layover</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,500;1,600;1,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -376,7 +376,7 @@ html.nomic [data-mode="say"],html.nomic [data-mode="name"],html.nomic [data-gmod
     <label>🐞 Audio & mic debug log</label>
     <p class="note" style="margin-top:0">If the audio sounds weird or the mic stops working, tap 🔧 in the conversation (or Reset audio here), then Share log and send it to Claude.</p>
     <div id="dbgBox"></div>
-    <p class="note" style="text-align:center;margin-top:18px">Wanderwort version <b id="appVer"></b></p>
+    <p class="note" style="text-align:center;margin-top:18px">Layover version <b id="appVer"></b></p>
   </div>
 </section>
 
@@ -587,7 +587,7 @@ function tapWords(text){
     return w?`<span class="tw" data-w="${esc(w)}">${esc(tok)}</span>`:esc(tok);
   }).join("");
 }
-const APP_VERSION = "43 (renamed Wanderwort, new icon)";
+const APP_VERSION = "44 (renamed Layover)";
 
 const VOICE_SETS = {es:{
   MX:{name:"Mexico",loc:"es-MX",F:"es-MX-DaliaNeural",M:"es-MX-JorgeNeural"},
@@ -1664,7 +1664,7 @@ async function importP(e){
   const f=e.target.files[0]; if(!f) return;
   try{
     const j=JSON.parse(await f.text()); const p=j.progress||j;
-    if(!Array.isArray(p.sessions)) throw new Error("Not a Wanderwort backup");
+    if(!Array.isArray(p.sessions)) throw new Error("Not a Layover backup");
     P=Object.assign(PBLANK(),p); saveP(); renderProgress(); renderToday(); toast(`Restored ${P.sessions.length} sessions`);
   }catch(err){ toast("Import failed: "+err.message,4000); }
 }
@@ -4002,7 +4002,7 @@ $("#gameFix").onclick=()=>{ unlockAudio(); resetAudio("game 🔧"); };
 const pad=n=>String(n).padStart(2,"0");
 function logText(){
   const st=DBG.status();
-  return `Wanderwort debug log · v${APP_VERSION} · ${new Date().toLocaleString()}\nNow: ${JSON.stringify(st)}\n\n`+
+  return `Layover debug log · v${APP_VERSION} · ${new Date().toLocaleString()}\nNow: ${JSON.stringify(st)}\n\n`+
     DBG.lines().map(([t,ty,m])=>{ const d=new Date(t); return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${String(d.getMilliseconds()).padStart(3,"0")} [${ty}] ${m}`; }).join("\n");
 }
 function renderDebug(){
@@ -4011,7 +4011,7 @@ function renderDebug(){
     <div class="row" style="margin-top:8px"><button class="btn ghost" id="dbgShare">📤 Share log</button><button class="btn ghost" id="dbgView">View</button></div>
     <div class="row" style="margin-top:8px"><button class="btn ghost" id="dbgReset">🔧 Reset audio</button><button class="btn ghost" id="dbgClear">Clear log</button></div>`;
   $("#dbgShare").onclick=async()=>{ const txt=logText();
-    try{ if(navigator.share){ await navigator.share({title:"Wanderwort debug log",text:txt}); return; } }catch(e){ if(e.name==="AbortError") return; }
+    try{ if(navigator.share){ await navigator.share({title:"Layover debug log",text:txt}); return; } }catch(e){ if(e.name==="AbortError") return; }
     try{ await navigator.clipboard.writeText(txt); toast("Log copied. Paste it to Claude."); }catch(e){ openSheet(`<h2>Debug log</h2><textarea style="height:60vh;font:11px monospace">${esc(txt)}</textarea>`); } };
   $("#dbgView").onclick=()=>openSheet(`<h2>Debug log</h2><pre class="dbg">${esc(logText().split("\n").slice(-200).join("\n"))}</pre><button class="btn ghost" onclick="closeSheet()">Close</button>`);
   $("#dbgReset").onclick=()=>{ resetAudio("settings"); setTimeout(renderDebug,800); };
