@@ -587,7 +587,7 @@ function tapWords(text){
     return w?`<span class="tw" data-w="${esc(w)}">${esc(tok)}</span>`:esc(tok);
   }).join("");
 }
-const APP_VERSION = "45 (Layover everywhere)";
+const APP_VERSION = "45 (Layover everywhere, full backup)";
 
 const VOICE_SETS = {es:{
   MX:{name:"Mexico",loc:"es-MX",F:"es-MX-DaliaNeural",M:"es-MX-JorgeNeural"},
@@ -1655,7 +1655,10 @@ Respond ONLY with JSON:
 
 function exportP(){
   try{
-    const blob=new Blob([JSON.stringify({app:"layover",v:1,exported:new Date().toISOString(),progress:P},null,1)],{type:"application/json"});
+    // Full backup: progress, vocab and scores for every language, plus settings. API keys are left out.
+    const all={}; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(/^hablemos\.(progress|vocab|usage)/.test(k)) all[k]=localStorage.getItem(k); }
+    const st=Object.assign({},S); delete st.azKey; delete st.clKey; delete st.demo;
+    const blob=new Blob([JSON.stringify({app:"layover",v:2,exported:new Date().toISOString(),progress:P,stores:all,settings:st},null,1)],{type:"application/json"});
     const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`layover-progress-${dayKey()}.json`;
     document.body.appendChild(a); a.click(); a.remove();
   }catch(e){ toast("Export failed: "+e.message,4000); }
@@ -1663,7 +1666,13 @@ function exportP(){
 async function importP(e){
   const f=e.target.files[0]; if(!f) return;
   try{
-    const j=JSON.parse(await f.text()); const p=j.progress||j;
+    const j=JSON.parse(await f.text());
+    if(j.stores&&typeof j.stores==="object"){
+      for(const [k,v] of Object.entries(j.stores)) if(/^hablemos\.(progress|vocab|usage)/.test(k)) localStorage.setItem(k,v);
+      if(j.settings){ const keep={azKey:S.azKey,azRegion:S.azRegion,clKey:S.clKey}; S=Object.assign({},DEFAULTS,j.settings,keep,{azRegion:keep.azRegion||j.settings.azRegion||DEFAULTS.azRegion}); save(); }
+      toast("Restored all languages. Reloading…"); setTimeout(()=>location.reload(),700); return;
+    }
+    const p=j.progress||j;
     if(!Array.isArray(p.sessions)) throw new Error("Not a Layover backup");
     P=Object.assign(PBLANK(),p); saveP(); renderProgress(); renderToday(); toast(`Restored ${P.sessions.length} sessions`);
   }catch(err){ toast("Import failed: "+err.message,4000); }
